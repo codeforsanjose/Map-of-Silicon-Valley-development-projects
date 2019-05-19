@@ -1,0 +1,157 @@
+{
+  [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Agrihood",
+        "Address": "90 N Winchester Blvd, 1834 Worthington Circle",
+        "City": "Santa Clara",
+        "Owner/Developer": "Core Companies",
+        "Project Overview": "Agrihood at BAREC Site; mixed-income housing + garden",
+        "Project Current State": "New project application",
+        "Catalyze SV's Role": "Extensive; Increasing density, mixed use, activiated, placemaking, combining with Santa Clara County Office of Veteran Services, Speno Shopping Center, and possibly other residential lots connected to it. Project for Public Space, (PPS) is engaged.",
+        "Presentation in PAC": "Mar 2018"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Agrihood",
+        "Address": "90 N Winchester Blvd, 1834 Worthington Circle",
+        "City": "Santa Clara",
+        "Owner/Developer": "Core Companies",
+        "Project Overview": "Agrihood at BAREC Site; mixed-income housing + garden",
+        "Project Current State": "New project application",
+        "Catalyze SV's Role": "Extensive; Increasing density, mixed use, activiated, placemaking, combining with Santa Clara County Office of Veteran Services, Speno Shopping Center, and possibly other residential lots connected to it. Project for Public Space, (PPS) is engaged.",
+        "Presentation in PAC": "Mar 2018",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Volar",
+        "Address": "350 S. Winchester Blvd.",
+        "City": "San Jose",
+        "Owner/Developer": "Salvatore Caruso Design Corporation",
+        "Project Overview": "18-story mixed-use tower",
+        "Project Current State": "Planning Commission approved; final vote by City Council on June 13 Item 10.2. City Council approved project 9-2 on June 13th",
+        "Catalyze SV's Role": "Action Alert to our Board; Kirk spoke in favor at Planning Commission; Catalyze SV letter to City Council. Advocay letter in support of project. Project approved.",
+        "Presentation in PAC": "N/A",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Senior Housing",
+        "Address": "2230 El Camino Real",
+        "City": "Santa Clara",
+        "Owner/Developer": "SummerHill Homes",
+        "Project Overview": "Mixed-use - senior housing & commercial retail",
+        "Project Current State": "Developer revising plans for City Council vote this fall; community mtg June 22",
+        "Catalyze SV's Role": "Catalyze SV’s 5/22 letter. Action Alert drafted by Adina. Participated in multiple city council meetings supporting the project, giving public testimony, and support letter. Project approved.",
+        "Presentation in PAC": "Apr 2017",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Smart & Final",
+        "Address": "320 Race St. ",
+        "City": "San Jose",
+        "Owner/Developer": "HMH",
+        "Project Overview": "Single-story Smart & Final store",
+        "Project Current State": "Approved; recently opened",
+        "Catalyze SV's Role": "Advocated for project proposal to be revised to include higher density and a housing component. Spoke out against project. Project approved.",
+        "Presentation in PAC": "N/A",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Charities Housing - Midtown",
+        "Address": "329 Page St.",
+        "City": "San Jose",
+        "Owner/Developer": "Charities Housing",
+        "Project Overview": "The proposal includes between 80 and 90 affordable studio apartments in a five- or six-story building. The development would allocate 0.75 parking spaces per unit, and Charities Housing would provide VTA transit passes to residents to encourage use of public transportation.",
+        "Project Current State": "Applicant seeking a Special Use Permit",
+        "Catalyze SV's Role": "Attended June BVNA community meeting; invited developer to August Catalyze SV Board meeting; developers presented at board meeting. Catalyze SV  supports the concept presented on October 2017 and we are looking forward to reconnect with Charities Housing after the design has been further developed.",
+        "Presentation in PAC": "Sep 2017",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "253 Race St",
+        "Address": "253 Race St",
+        "City": "San Jose",
+        "Owner/Developer": "Core Companies",
+        "Project Overview": "Affordable and Senior Affordable Housing. 91 senior apartments in a 5-story (4 floors living over 1 floor parking) building and 116 family apartments in a 6-story (4 floors living over 2 floors parking) building. Generous Common open space. Close to commercial corridor and transit.",
+        "Project Current State": "Under intial Project Review by City; community meeting June 29th at 6:30 pm on 1100 Shasta Ave",
+        "Catalyze SV's Role": "Met w/developer on 5/24; discussed less parking, add retail, sustainability features; maybe suggest parking underground?; unbundle the parking? Drafted letter to send to Core. Letter sent on 10/14/17. PAC reviewed project in January and sent letters and scorecard to council and developer. Successful in advocating and achieveing 2,000sqft of commercial in project (developer wanted ZERO commercial). Project approved.",
+        "Presentation in PAC": "Jan 2018",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "Teacher Housing",
+        "Address": "2119 Lincoln Ave. ",
+        "City": "San Jose",
+        "Owner/Developer": "Sarah Chaffin",
+        "Project Overview": "General Plan amendment to rezone commercial property for teacher work force housing",
+        "Project Current State": "Application denied",
+        "Catalyze SV's Role": "",
+        "Presentation in PAC": "N/A",
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [125.6, 10.1]
+      },
+      "properties": {
+        "Project Name": "585 Benton St",
+        "Address": "585 Benton St",
+        "City": "Santa Clara",
+        "Owner/Developer": "Prometheus",
+        "Project Overview": "5.8 acres, mixed use 355 residential units and 22,000 sf retail adjacent to Santa Clara University and Santa Clara Caltrain/BART/ACE station.",
+        "Project Current State": "Approved",
+        "Catalyze SV's Role": "Catalyze met with developer and encouraged more housing and fewer parking spaces due to transit proximity. Attended planning and council meetings to support the project. Sent advocacy letter and scorecard to developer and council members",
+        "Presentation in PAC": "Jan 2018",
+      }
+    }
+  ]
+}
