@@ -1,158 +1,205 @@
 {
-  "type": "FeatureCollection",
-  "features" : [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.950222, 37.33247]
-      },
-      "properties": {
-        "Project Name": "Agrihood",
-        "Address": "90 N Winchester Blvd",
-        "City": "Santa Clara",
-        "Owner/Developer": "Core Companies",
-        "Project Overview": "Agrihood at BAREC Site; mixed-income housing + garden",
-        "Project Current State": "New project application",
-        "Catalyze SV's Role": "Extensive; Increasing density, mixed use, activiated, placemaking, combining with Santa Clara County Office of Veteran Services, Speno Shopping Center, and possibly other residential lots connected to it. Project for Public Space, (PPS) is engaged.",
-        "Presentation in PAC": "Mar 2018"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.952270, 37.326720]
-      },
-      "properties": {
-        "Project Name": "Agrihood",
-        "Address": "1834 Worthington Circle",
-        "City": "Santa Clara",
-        "Owner/Developer": "Core Companies",
-        "Project Overview": "Agrihood at BAREC Site; mixed-income housing + garden",
-        "Project Current State": "New project application",
-        "Catalyze SV's Role": "Extensive; Increasing density, mixed use, activiated, placemaking, combining with Santa Clara County Office of Veteran Services, Speno Shopping Center, and possibly other residential lots connected to it. Project for Public Space, (PPS) is engaged.",
-        "Presentation in PAC": "Mar 2018"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.949571, 37.321469]
-      },
-      "properties": {
-        "Project Name": "Volar",
-        "Address": "350 S. Winchester Blvd.",
-        "City": "San Jose",
-        "Owner/Developer": "Salvatore Caruso Design Corporation",
-        "Project Overview": "18-story mixed-use tower",
-        "Project Current State": "Planning Commission approved; final vote by City Council on June 13 Item 10.2. City Council approved project 9-2 on June 13th",
-        "Catalyze SV's Role": "Action Alert to our Board; Kirk spoke in favor at Planning Commission; Catalyze SV letter to City Council. Advocay letter in support of project. Project approved.",
-        "Presentation in PAC": "N/A"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.96414, 37.35218]
-      },
-      "properties": {
-        "Project Name": "Senior Housing",
-        "Address": "2230 El Camino Real",
-        "City": "Santa Clara",
-        "Owner/Developer": "SummerHill Homes",
-        "Project Overview": "Mixed-use - senior housing & commercial retail",
-        "Project Current State": "Developer revising plans for City Council vote this fall; community mtg June 22",
-        "Catalyze SV's Role": "Catalyze SV’s 5/22 letter. Action Alert drafted by Adina. Participated in multiple city council meetings supporting the project, giving public testimony, and support letter. Project approved.",
-        "Presentation in PAC": "Apr 2017"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.8261, 37.2751]
-      },
-      "properties": {
-        "Project Name": "Smart & Final",
-        "Address": "320 Race St. ",
-        "City": "San Jose",
-        "Owner/Developer": "HMH",
-        "Project Overview": "Single-story Smart & Final store",
-        "Project Current State": "Approved; recently opened",
-        "Catalyze SV's Role": "Advocated for project proposal to be revised to include higher density and a housing component. Spoke out against project. Project approved.",
-        "Presentation in PAC": "N/A"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.91557, 37.32231]
-      },
-      "properties": {
-        "Project Name": "Charities Housing - Midtown",
-        "Address": "329 Page St.",
-        "City": "San Jose",
-        "Owner/Developer": "Charities Housing",
-        "Project Overview": "The proposal includes between 80 and 90 affordable studio apartments in a five- or six-story building. The development would allocate 0.75 parking spaces per unit, and Charities Housing would provide VTA transit passes to residents to encourage use of public transportation.",
-        "Project Current State": "Applicant seeking a Special Use Permit",
-        "Catalyze SV's Role": "Attended June BVNA community meeting; invited developer to August Catalyze SV Board meeting; developers presented at board meeting. Catalyze SV  supports the concept presented on October 2017 and we are looking forward to reconnect with Charities Housing after the design has been further developed.",
-        "Presentation in PAC": "Sep 2017"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.91155, 37.32452]
-      },
-      "properties": {
-        "Project Name": "253 Race St",
-        "Address": "253 Race St",
-        "City": "San Jose",
-        "Owner/Developer": "Core Companies",
-        "Project Overview": "Affordable and Senior Affordable Housing. 91 senior apartments in a 5-story (4 floors living over 1 floor parking) building and 116 family apartments in a 6-story (4 floors living over 2 floors parking) building. Generous Common open space. Close to commercial corridor and transit.",
-        "Project Current State": "Under intial Project Review by City; community meeting June 29th at 6:30 pm on 1100 Shasta Ave",
-        "Catalyze SV's Role": "Met w/developer on 5/24; discussed less parking, add retail, sustainability features; maybe suggest parking underground?; unbundle the parking? Drafted letter to send to Core. Letter sent on 10/14/17. PAC reviewed project in January and sent letters and scorecard to council and developer. Successful in advocating and achieveing 2,000sqft of commercial in project (developer wanted ZERO commercial). Project approved.",
-        "Presentation in PAC": "Jan 2018"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.88911, 37.29179]
-      },
-      "properties": {
-        "Project Name": "Teacher Housing",
-        "Address": "2119 Lincoln Ave. ",
-        "City": "San Jose",
-        "Owner/Developer": "Sarah Chaffin",
-        "Project Overview": "General Plan amendment to rezone commercial property for teacher work force housing",
-        "Project Current State": "Application denied",
-        "Catalyze SV's Role": "",
-        "Presentation in PAC": "N/A"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-121.95146, 37.348465]
-      },
-      "properties": {
-        "Project Name": "585 Benton St",
-        "Address": "585 Benton St",
-        "City": "Santa Clara",
-        "Owner/Developer": "Prometheus",
-        "Project Overview": "5.8 acres, mixed use 355 residential units and 22,000 sf retail adjacent to Santa Clara University and Santa Clara Caltrain/BART/ACE station.",
-        "Project Current State": "Approved",
-        "Catalyze SV's Role": "Catalyze met with developer and encouraged more housing and fewer parking spaces due to transit proximity. Attended planning and council meetings to support the project. Sent advocacy letter and scorecard to developer and council members",
-        "Presentation in PAC": "Jan 2018"
-      }
-    }
-  ]
+	"features": [
+		{
+			"properties": {
+				"project_name": "Abra",
+				"project_overview": "Reiciendis sed officiis magni. Velit amet non sed autem molestiae. Et aspernatur non reiciendis quia qui. Velit sed et voluptatem harum asperiores.",
+				"next_meeting": "06/02/19",
+				"links": null,
+				"city": "San Jose",
+				"score": 9.5,
+				"address": "1234 Fake Street",
+				"id": 1
+			},
+			"geometry": {
+				"coordinates": [
+					37.348802,
+					-121.81709
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Bulbasaur",
+				"project_overview": "Voluptatem consequatur et perferendis ipsa. Vel ut aut dicta quod est. Porro qui asperiores et cumque qui. Ab veniam officiis amet dolorum.",
+				"next_meeting": "06/03/19",
+				"links": "www.jfalds.org",
+				"city": "Santa Clara",
+				"score": 2.4,
+				"address": "372C White Street",
+				"id": 2
+			},
+			"geometry": {
+				"coordinates": [
+					37.347825,
+					-121.942028
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Charmander",
+				"project_overview": "Alias in quis laboriosam esse velit iste. Et necessitatibus quia sit voluptatem quaerat assumenda dolorum. Ipsum natus praesentium vel et quibusdam iste qui. Eum sequi unde et.",
+				"next_meeting": null,
+				"links": "www.isafd.com",
+				"city": "San Jose",
+				"score": 7.4,
+				"address": "51 W West Avenue",
+				"id": 3
+			},
+			"geometry": {
+				"coordinates": [
+					37.322077,
+					-121.818726
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Dragonair",
+				"project_overview": "Qui excepturi aut similique expedita. Libero distinctio et dignissimos fugit qui. Sequi maiores quas a earum quae nemo voluptatibus rem. Maiores cumque neque molestiae provident ut ut laborum. Voluptatem officia ipsam in. Aliquam quisquam voluptatem rerum veniam non earum ea et.",
+				"next_meeting": null,
+				"links": "www.ufeoia.org",
+				"city": "San Jose",
+				"score": 9.8,
+				"address": "9531 Myrtle Street",
+				"id": 4
+			},
+			"geometry": {
+				"coordinates": [
+					37.31214,
+					-121.828403
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Eevee",
+				"project_overview": "Qui rerum qui atque omnis soluta repudiandae numquam. Eos doloribus non quibusdam. Illum molestias illo perspiciatis eveniet aliquid qui nisi similique. Omnis impedit odio iusto voluptates. Eligendi aut expedita beatae et error.",
+				"next_meeting": "06/28/19",
+				"links": null,
+				"city": "Santa Clara",
+				"score": 6.5,
+				"address": "93 Briarwood Street",
+				"id": 5
+			},
+			"geometry": {
+				"coordinates": [
+					37.343011,
+					-121.921368
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Fearow",
+				"project_overview": "Libero impedit aut voluptatem magni quis exercitationem. Eius amet ut voluptatem inventore. Enim in itaque et enim sequi. Dolorum atque hic minus. Iste voluptates et impedit velit amet mollitia est qui. Et deleniti voluptatem dolor quibusdam quos hic.",
+				"next_meeting": "07/27/19",
+				"links": null,
+				"city": "San Jose",
+				"score": 3.4,
+				"address": "29 Wintergreen Court",
+				"id": 6
+			},
+			"geometry": {
+				"coordinates": [
+					37.36085,
+					-121.925117
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Growlithe",
+				"project_overview": "Eum placeat error sed a. Non eius aspernatur doloribus. Vitae culpa saepe ullam. Est quia consectetur dolores eum nam est eum. Ducimus recusandae vel aliquid et est possimus quam.",
+				"next_meeting": null,
+				"links": "www.ugreaifs.com",
+				"city": "San Jose",
+				"score": 4.6,
+				"address": "392 E. Eastingdale Road",
+				"id": 7
+			},
+			"geometry": {
+				"coordinates": [
+					37.297469,
+					-121.869124
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Houndoom",
+				"project_overview": "Sed sit id dolore sequi distinctio at explicabo. In debitis sequi magnam et doloribus deleniti. Possimus fugit qui perspiciatis facere nostrum et voluptates aut. Atque dolores quo consequatur suscipit tenetur. Ex dicta qui perferendis dolorem quia exercitationem eaque sunt.",
+				"next_meeting": "01/15/20",
+				"links": "www.foisk.org",
+				"city": "San Jose",
+				"score": 7.3,
+				"address": "462 Highting Court",
+				"id": 8
+			},
+			"geometry": {
+				"coordinates": [
+					37.3067,
+					-121.883838
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Ivysaur",
+				"project_overview": "Incidunt quod eaque amet sed. Dolorem cumque voluptatem sit. Rerum quidem autem atque. Excepturi dicta eligendi et maiores facilis tempore nam. Corporis alias porro ullam ea. Qui dolorem eum adipisci laudantium corrupti nihil.",
+				"next_meeting": "06/30/19",
+				"links": null,
+				"city": "Santa Clara",
+				"score": 3.3,
+				"address": "938 Jump Street",
+				"id": 9
+			},
+			"geometry": {
+				"coordinates": [
+					37.326633,
+					-121.936609
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		},
+		{
+			"properties": {
+				"project_name": "Jolteon",
+				"project_overview": "Ut quis maiores quidem rem. Qui incidunt voluptatem voluptas et voluptatem placeat. Id in qui enim repellendus quasi dolores. Similique et vitae vel omnis consectetur.",
+				"next_meeting": "08/14/19",
+				"links": null,
+				"city": "Santa Clara",
+				"score": 8.2,
+				"address": "412 Court Drive",
+				"id": 10
+			},
+			"geometry": {
+				"coordinates": [
+					37.365854,
+					-122.017793
+				],
+				"type": "Point"
+			},
+			"type": "Feature"
+		}
+	],
+	"types": "FeatureCollection"
 }
