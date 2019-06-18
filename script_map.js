@@ -1,7 +1,3 @@
-import "./styles.css";
-import data from "./data.js";
-import L from "leaflet";
-require("leaflet-draw");  
 const position = [37.3, -121.86];
 const map = L.map("mapid").setView(position, 12.2);
 
@@ -62,7 +58,7 @@ map.on("draw:created", function(e) {
 // end of drawing tools display ///
 
 //render each marker to the map
-let properties = data.features;
+let properties = DATA.features;
 
 function onClick(e) {
   document.getElementById("panel").classList.add("show-panel", "toggle");
