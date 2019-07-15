@@ -71,9 +71,19 @@ function onClick(e) {
       selectedProperty = el;
     }
   }
+
+  let propertyImage = ""
+  if(selectedProperty.properties["ImageFile"] !== "") {
+    propertyImage = "data:image/png;base64, ".concat(
+      selectedProperty.properties["ImageFile"])
+  }
+
+  console.log(propertyImage)
   document.getElementById(
     "panel"
-  ).innerHTML = `<span id="toggle"></span><div class="panelDescription"> 
+  ).innerHTML = `<span id="toggle"></span><div class="panelDescription">
+     <p> <img src= "${propertyImage}" /> </p>
+
      <p> <b>Name:</b> ${selectedProperty.properties["Project Name"]}</p>
 
      <p> <b>Address:</b> ${selectedProperty.properties.Address}, ${
