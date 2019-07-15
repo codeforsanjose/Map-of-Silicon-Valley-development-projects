@@ -5,6 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+// import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.util.Base64;
+
 // This java class compiles a single in-line HTML page from the source files
 // and adds the csv data as a javascript json dictionary.
 public class PackageHTML {
@@ -96,7 +103,7 @@ public class PackageHTML {
         }
     }
 
-    private static String formatJSON(List<List<String>> data) {
+    private static String formatJSON(List<List<String>> data) throws Exception {
         int numRows = data.size();
         List<String> colNames = data.get(0);
         StringBuffer jsonString = new StringBuffer(
@@ -113,13 +120,17 @@ public class PackageHTML {
 
     // Columns start with Latitude, Longitude, the rest are all properties
     private static void appendFeature(StringBuffer buf, List<String> colNames,
-                                     List<String> row) {
+                                     List<String> row) throws Exception {
         int numProps = row.size();
         buf.append(
             "{type:\"Feature\",geometry:{type:\"Point\",coordinates:[" +
             row.get(1) + "," + row.get(0) + "]},properties:{");
 
-        for (int i = 2; i < numProps; i++) {
+        buf.append(
+            "\"" + colNames.get(2) + "\":\"" + getImage(row.get(2)) + "\"");
+        if (numProps > 3) buf.append(",");
+
+        for (int i = 3; i < numProps; i++) {
             buf.append("\"" + colNames.get(i) + "\":\"" + row.get(i) + "\"");
             if (i < numProps-1) buf.append(",");
         }
@@ -127,5 +138,27 @@ public class PackageHTML {
         buf.append("}}");
     }
 
+    private static String getImage(String filename) throws Exception {
+        if (filename.length() == 0) {
+            return "";
+        }
 
+        ByteArrayOutputStream baos=new ByteArrayOutputStream(1000);
+
+        try {
+            BufferedImage img=ImageIO.read(new File(filename));
+            ImageIO.write(img, "png", baos);
+            baos.flush();
+
+            String base64String = 
+                Base64.getEncoder().encodeToString(baos.toByteArray());
+            baos.close();
+
+            return base64String;
+        }
+        catch (Exception e) {
+            System.err.println("Problem loading image file: " + filename);
+            throw e;
+        }
+    }
 }
