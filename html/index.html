@@ -20,11 +20,40 @@
   <style>
 
   /* Add your app styling here */
+
   #map {
-    position:absolute; top:0; bottom:0; width:100%;
+    position:absolute; top:0; bottom:0; width:100%; z-index: 1;
   }
-  .mapboxgl-popup {
-    max-width: 400px;
+
+   .sidebar {
+    position: absolute;
+    right: 1em;
+    top: 1em;
+    bottom: 1em;
+    max-width: 25vw;
+    z-index: 100;
+    transition: right 0.4s ease;
+  }
+
+  .sidebar.hidden {
+    right: -100%;
+  }
+  .sidebar .content {
+    height: 100%;
+    position: relative;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    padding: 10px 10px 15px;
+    pointer-events: auto;
+  }
+  .sidebar .close-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    border: 0;
+    border-radius: 0 3px 0 0;
+    cursor: pointer;
+    background-color: transparent;
   }
 
   </style>
@@ -39,7 +68,15 @@
 
   <!-- Add your site or application content here -->
   <div id="map">
+
   </div>
+  <div class="sidebar hidden">
+    <div class="content">
+      <button class="close-btn">X</button>
+      <div class="info"></div>
+    </div>
+  </div>
+
 
   <script>
     // Avoid `console` errors in browsers that lack a console.
@@ -49,14 +86,16 @@
   <script>
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
 
+    const sidebar = document.querySelector('.sidebar');
+    const sidebar_info = document.querySelector('.info');
+    const close_btn = document.querySelector('.close-btn');
+
     const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
     center: [-121.849829, 37.380864],
     zoom: 10
     });
-
-    const projects = map.getLayer('projects');
 
     // When a click event occurs on a feature in the places layer, open a popup at the
     // location of the feature, with description HTML from its properties.
@@ -65,30 +104,28 @@
 
       const coordinates = currentProject.geometry.coordinates.slice();
       const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
-      const content = `<h3>${Project_Name}</h3>
-      <p>
-        ${place_name}
-      </p>
-      <ul>
-        <li>
-          Expected completion: ${Completion_Date}
-        </li>
-        <li>
-          Contact Info: ${Contact}
-        </li>
-      </ul>`
+      const content = `
+        <h3>${Project_Name}</h3>
+        <p>
+          ${place_name}
+        </p>
+        <ul>
+          <li>
+            Expected completion: ${Completion_Date}
+          </li>
+          <li>
+            Contact Info: ${Contact}
+          </li>
+        </ul>`
 
-      // Ensure that if the map is zoomed out such that multiple
-      // copies of the feature are visible, the popup appears
-      // over the copy being pointed to.
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    }
+      sidebar.classList.toggle('hidden');
+      sidebar_info.textContent = content;
 
-    new mapboxgl.Popup()
-      .setLngLat(coordinates)
-      .setHTML(content)
-      .addTo(map);
+    });
+
+    close_btn.addEventListener('click',()=>{
+      sidebar.classList.toggle('hidden');
+      sidebar_info.textContent = '';
     });
 
     // Change the cursor to a pointer when the mouse is over the places layer.
@@ -101,7 +138,6 @@
       map.getCanvas().style.cursor = '';
     });
 
-    // need to handle dev zone layer
   </script>
 
 </body>
