@@ -1,0 +1,109 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <title>App</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+  <!-- Mapbox -->
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.css' rel='stylesheet' />
+
+  <style>
+  /* Opinionated Defaults */
+  html{color:#222;font-size:1em;line-height:1.4}::-moz-selection{background:#b3d4fc;text-shadow:none}::selection{background:#b3d4fc;text-shadow:none}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}audio,canvas,iframe,img,svg,video{vertical-align:middle}fieldset{border:0;margin:0;padding:0}textarea{resize:vertical}@media print{*,*:before,*:after{background:transparent!important;color:#000!important;-webkit-box-shadow:none!important;box-shadow:none!important;text-shadow:none!important}a,a:visited{text-decoration:underline}a[href]:after{content:" (" attr(href) ")"}abbr[title]:after{content:" (" attr(title) ")"}a[href^="#"]:after,a[href^="javascript:"]:after{content:""}pre{white-space:pre-wrap!important}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}p,h2,h3{orphans:3;widows:3}h2,h3{page-break-after:avoid}}
+  </style>
+
+  <style>
+
+  /* Add your app styling here */
+  #map {
+    position:absolute; top:0; bottom:0; width:100%;
+  }
+  .mapboxgl-popup {
+    max-width: 400px;
+  }
+
+  </style>
+
+  <meta name="theme-color" content="#fafafa">
+</head>
+
+<body>
+  <!--[if IE]>
+    <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+  <![endif]-->
+
+  <!-- Add your site or application content here -->
+  <div id="map">
+  </div>
+
+  <script>
+    // Avoid `console` errors in browsers that lack a console.
+    (function(){var e;var d=function(){};var b=["assert","clear","count","debug","dir","dirxml","error","exception","group","groupCollapsed","groupEnd","info","log","markTimeline","profile","profileEnd","table","time","timeEnd","timeline","timelineEnd","timeStamp","trace","warn"];var c=b.length;var a=(window.console=window.console||{});while(c--){e=b[c];if(!a[e]){a[e]=d}}}());
+  </script>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
+
+    const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
+    center: [-121.849829, 37.380864],
+    zoom: 10
+    });
+
+    const projects = map.getLayer('projects');
+
+    // When a click event occurs on a feature in the places layer, open a popup at the
+    // location of the feature, with description HTML from its properties.
+    map.on('click', 'projects', function (e) {
+      const currentProject = e.features[0];
+
+      const coordinates = currentProject.geometry.coordinates.slice();
+      const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
+      const content = `<h3>${Project_Name}</h3>
+      <p>
+        ${place_name}
+      </p>
+      <ul>
+        <li>
+          Expected completion: ${Completion_Date}
+        </li>
+        <li>
+          Contact Info: ${Contact}
+        </li>
+      </ul>`
+
+      // Ensure that if the map is zoomed out such that multiple
+      // copies of the feature are visible, the popup appears
+      // over the copy being pointed to.
+      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+
+    new mapboxgl.Popup()
+      .setLngLat(coordinates)
+      .setHTML(content)
+      .addTo(map);
+    });
+
+    // Change the cursor to a pointer when the mouse is over the places layer.
+    map.on('mouseenter', 'projects', function () {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change it back to a pointer when it leaves.
+    map.on('mouseleave', 'projects', function () {
+      map.getCanvas().style.cursor = '';
+    });
+
+    // need to handle dev zone layer
+  </script>
+
+</body>
+
+</html>
