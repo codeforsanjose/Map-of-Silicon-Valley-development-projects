@@ -23,6 +23,7 @@
 
   body {
     overflow: hidden;
+    font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
   }
 
   #map {
@@ -159,6 +160,8 @@
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
 
+    const title = document.createElement('h3');
+
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
@@ -166,14 +169,13 @@
       zoom: 10
     });
 
+    // wait for map to finish load before executing map operations
     map.on('load', () => {
 
-      // When a click event occurs on a feature in the places layer, open a popup at the
-      // location of the feature, with description HTML from its properties.
+      // When a click event occurs on a marker in the projects layer, show info
       map.on('click', 'projects', function (e) {
         const currentProject = e.features[0];
-
-        const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
+        // const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
 
         // template for the sidebar content
         // const content = `
@@ -190,14 +192,12 @@
         //     </li>
         //   </ul>`
 
-        const title = document.createElement('h3');
-
-        // clear any content that was there
+        // loop through sidebar info contents to clear any existing content
         while (sidebar_info.firstChild) {
             sidebar_info.firstChild.remove();
         }
 
-        // don't hide sidebar if already open, animate change instead
+        // animate sidebar info change if sidebar already open
         if (state.sidebar_open) {
           // clear animation with an override
           sidebar_info.style.animation ='none';
@@ -206,6 +206,7 @@
           // allow animation to play again
           sidebar_info.style.animation = null;
         } else {
+          // otherwise just show the sidebar
           state.sidebar_open = true;
           sidebar.classList.toggle('hidden');
         }
@@ -213,9 +214,11 @@
         // add the info to the sidebar
         for (let property in currentProject.properties) {
           if (property === 'Project_Name') {
+            // just need to set the title text to the heading element
             title.textContent = Project_Name;
             sidebar_info.prepend(title);
           } else {
+            // create paragraphs for each property value
             let paragraph = document.createElement('p');
             paragraph.textContent = currentProject.properties[property];
             sidebar_info.append(paragraph);
