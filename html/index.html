@@ -21,6 +21,10 @@
 
   /* Add your app styling here */
 
+  body {
+    overflow: hidden;
+  }
+
   #map {
     position:absolute; top:0; bottom:0; width:100%; z-index: 1;
   }
@@ -30,23 +34,31 @@
     right: 1em;
     top: 1em;
     bottom: 1em;
-    max-width: 25vw;
+    width: 25vw;
+    min-width: 12em;
     z-index: 100;
-    transition: right 0.4s ease;
+    transform: translateX(0);
+    transition: transform 0.4s ease-in-out;
   }
 
   .sidebar.hidden {
-    right: -100%;
+    transform: translateX(200%);
   }
-  .sidebar .content {
+  .content {
     height: 100%;
     position: relative;
     background: #fff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     padding: 10px 10px 15px;
     pointer-events: auto;
+    opacity: 1;
+
   }
-  .sidebar .close-btn {
+
+  .info {
+  }
+
+  .close-btn {
     position: absolute;
     right: 0;
     top: 0;
@@ -56,6 +68,59 @@
     background-color: transparent;
   }
 
+  .fade-in {
+    animation: fadeIn ease 0.5s;
+    -webkit-animation: fadeIn ease 0.5s;
+    -moz-animation: fadeIn ease 0.5s;
+    -o-animation: fadeIn ease 0.5s;
+    -ms-animation: fadeIn ease 0.5s;
+  }
+
+
+  @keyframes fadeIn{
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+
+  @-moz-keyframes fadeIn {
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+
+  @-webkit-keyframes fadeIn {
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+
+  @-o-keyframes fadeIn {
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+
+  @-ms-keyframes fadeIn {
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
   </style>
 
   <meta name="theme-color" content="#fafafa">
@@ -73,7 +138,7 @@
   <div class="sidebar hidden">
     <div class="content">
       <button class="close-btn">X</button>
-      <div class="info"></div>
+      <div class="info fade-in"></div>
     </div>
   </div>
 
@@ -84,6 +149,10 @@
   </script>
 
   <script>
+    const state = {
+      sidebar_open: false
+    }
+
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
 
     const sidebar = document.querySelector('.sidebar');
@@ -91,51 +160,85 @@
     const close_btn = document.querySelector('.close-btn');
 
     const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
-    center: [-121.849829, 37.380864],
-    zoom: 10
+      container: 'map',
+      style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
+      center: [-121.849829, 37.380864],
+      zoom: 10
     });
 
-    // When a click event occurs on a feature in the places layer, open a popup at the
-    // location of the feature, with description HTML from its properties.
-    map.on('click', 'projects', function (e) {
-      const currentProject = e.features[0];
+    map.on('load', () => {
 
-      const coordinates = currentProject.geometry.coordinates.slice();
-      const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
-      const content = `
-        <h3>${Project_Name}</h3>
-        <p>
-          ${place_name}
-        </p>
-        <ul>
-          <li>
-            Expected completion: ${Completion_Date}
-          </li>
-          <li>
-            Contact Info: ${Contact}
-          </li>
-        </ul>`
+      // When a click event occurs on a feature in the places layer, open a popup at the
+      // location of the feature, with description HTML from its properties.
+      map.on('click', 'projects', function (e) {
+        const currentProject = e.features[0];
 
-      sidebar.classList.toggle('hidden');
-      sidebar_info.textContent = content;
+        const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
 
-    });
+        // template for the sidebar content
+        // const content = `
+        //   <h3>${Project_Name}</h3>
+        //   <p>
+        //     ${place_name}
+        //   </p>
+        //   <ul>
+        //     <li>
+        //       Expected completion: ${Completion_Date}
+        //     </li>
+        //     <li>
+        //       Contact Info: ${Contact}
+        //     </li>
+        //   </ul>`
 
-    close_btn.addEventListener('click',()=>{
-      sidebar.classList.toggle('hidden');
-      sidebar_info.textContent = '';
-    });
+        const title = document.createElement('h3');
 
-    // Change the cursor to a pointer when the mouse is over the places layer.
-    map.on('mouseenter', 'projects', function () {
-      map.getCanvas().style.cursor = 'pointer';
-    });
+        // clear any content that was there
+        while (sidebar_info.firstChild) {
+            sidebar_info.firstChild.remove();
+        }
 
-    // Change it back to a pointer when it leaves.
-    map.on('mouseleave', 'projects', function () {
-      map.getCanvas().style.cursor = '';
+        // don't hide sidebar if already open, animate change instead
+        if (state.sidebar_open) {
+          // clear animation with an override
+          sidebar_info.style.animation ='none';
+          // trigger reflow so css animation can play again
+          void sidebar_info.offsetWidth;
+          // allow animation to play again
+          sidebar_info.style.animation = null;
+        } else {
+          state.sidebar_open = true;
+          sidebar.classList.toggle('hidden');
+        }
+
+        // add the info to the sidebar
+        for (let property in currentProject.properties) {
+          if (property === 'Project_Name') {
+            title.textContent = Project_Name;
+            sidebar_info.prepend(title);
+          } else {
+            let paragraph = document.createElement('p');
+            paragraph.textContent = currentProject.properties[property];
+            sidebar_info.append(paragraph);
+          }
+        }
+
+      });
+
+      // hide the sidebar on click
+      close_btn.addEventListener('click', () => {
+        state.sidebar_open = false;
+        sidebar.classList.toggle('hidden');
+      });
+
+      // Change the cursor to a pointer when the mouse is over the places layer.
+      map.on('mouseenter', 'projects', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      // Change it back to a pointer when it leaves.
+      map.on('mouseleave', 'projects', function () {
+        map.getCanvas().style.cursor = '';
+      });
     });
 
   </script>
