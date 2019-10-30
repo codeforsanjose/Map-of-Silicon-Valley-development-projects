@@ -19,7 +19,7 @@
 
   <style>
 
-  /* Add your app styling here */
+  /* general styles */
 
   body {
     overflow: hidden;
@@ -30,44 +30,85 @@
     position:absolute; top:0; bottom:0; width:100%; z-index: 1;
   }
 
-   .sidebar {
+  /* layout */
+
+  .no-margin {
+    margin: 0;
+  }
+
+  /* Flyout sidebar where marker info is displayed */
+
+  .sidebar {
     position: absolute;
     right: 1em;
     top: 1em;
     bottom: 1em;
     width: 25vw;
     min-width: 12em;
-    z-index: 100;
     transform: translateX(0);
     transition: transform 0.4s ease-in-out;
+    z-index: 200;
   }
 
   .sidebar.hidden {
     transform: translateX(200%);
   }
+
   .content {
-    height: 100%;
+    overflow-y: auto;
+    max-height: 90vh;
+    border-top: 3px solid #617482;
     position: relative;
     background: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    padding: 10px 10px 15px;
+    padding: 1em;
     pointer-events: auto;
     opacity: 1;
-
-  }
-
-  .info {
+    word-wrap: break-word;
+    box-shadow: 1px 1px 3px #00000069;
   }
 
   .close-btn {
     position: absolute;
+    color: #888;
+    font-size: 1em;
     right: 0;
+    padding: 0.5em;
     top: 0;
     border: 0;
-    border-radius: 0 3px 0 0;
     cursor: pointer;
     background-color: transparent;
   }
+
+  .close-btn:hover {
+    color: #555;
+  }
+
+  /* map legend */
+
+  .legend {
+    position: absolute;
+    right: 1em;
+    bottom: 1em;
+    background: #ffffffad;
+    z-index: 100;
+    padding: 1em;
+  }
+
+  .legend ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .legend span {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    border-radius: 999px;
+    margin-right: 0.5em;
+  }
+
+  /* animation effects */
 
   .fade-in {
     animation: fadeIn ease 0.5s;
@@ -133,16 +174,17 @@
   <![endif]-->
 
   <!-- Add your site or application content here -->
-  <div id="map">
-
-  </div>
-  <div class="sidebar hidden">
+  <main id="map"></main>
+  <aside class="sidebar hidden">
     <div class="content">
       <button class="close-btn">X</button>
       <div class="info fade-in"></div>
     </div>
-  </div>
-
+  </aside>
+  <aside class="legend">
+  </aside>
+  <section class="list-view">
+  </section>
 
   <script>
     // Avoid `console` errors in browsers that lack a console.
@@ -153,94 +195,192 @@
     const state = {
       sidebar_open: false
     }
+    const CONSTANTS = {
+      hidden_class: 'hidden',
+      projects_layer: 'projects-catalyze-sv'
+    }
 
-    mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
-
+    // dom elements
     const sidebar = document.querySelector('.sidebar');
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
+    const legend = document.querySelector('.legend');
 
-    const title = document.createElement('h3');
+    // to hold the sidebar elements before append
+    const info_template = document.createElement('template');
 
+    // generate the map
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
-      center: [-121.849829, 37.380864],
+      center: [-121.898395, 37.322972],
       zoom: 10
     });
 
-    // wait for map to finish load before executing map operations
+    // wait for map to finish load before executing map functions
     map.on('load', () => {
 
-      // When a click event occurs on a marker in the projects layer, show info
-      map.on('click', 'projects', function (e) {
-        const currentProject = e.features[0];
-        // const {place_name, Completion_Date, Project_Name, Contact} = currentProject.properties;
+      const generate_legend = (legend_items) => {
+        /*
+        Creates the dom elements for the map legend / key
+        Args: legend_items (array) - array of objs containing name/color info for each label
+        Return: legend ul element (obj)
+        */
+
+        const legend_list = document.createElement('ul');
+
+        legend_items.forEach((current_item) => {
+          let list_item = document.createElement('li');
+          let item_color = document.createElement('span');
+          list_item.textContent = current_item.name;
+          item_color.style.backgroundColor = current_item.color;
+          // so the color appears first
+          list_item.prepend(item_color);
+          legend_list.append(list_item);
+        });
+
+        return legend_list
+      };
+
+      const generate_sidebar = (marker_properties) => {
+        /*
+        Creates the sidebar info element dom contents.
+        Args: marker_properties (obj) - contains the properties for a given marker
+        Return: template string literal (str) - html string to set the info template element to
+        */
+
+        let { Address,
+               City,
+               State,
+               Phase,
+               "Project Name" : project_name,
+               "ZIP Code": Zip,
+               "Type of Project/ Overview" : project_type,
+               "Link to City Documents" : city_docs,
+               "Date Presented to PAC" : presented_date,
+               "Current Status in Catalyze SV" : catalyze_status,
+               "Next Public Meeting" : next_meet,
+               "Project Website" : website,
+               "Owner/Developer Name" : developer,
+               "Current Status With City" : detail_status,
+               "Catalyze SV's Scorecard" : score,
+               "Catalyze SV's Letter" : catalyze_letter,
+             } = marker_properties;
 
         // template for the sidebar content
-        // const content = `
-        //   <h3>${Project_Name}</h3>
-        //   <p>
-        //     ${place_name}
-        //   </p>
-        //   <ul>
-        //     <li>
-        //       Expected completion: ${Completion_Date}
-        //     </li>
-        //     <li>
-        //       Contact Info: ${Contact}
-        //     </li>
-        //   </ul>`
+        return `
+          <h3>${project_name}</h3>
+          <p>
+            ${Address}, ${City}, ${State} ${Zip}
+          </p>
+          <p>
+            ${project_type}
+          </p>
+          <ul>
+            <li>
+              Developer: ${developer}
+            </li>
+            <li>
+              Status: ${Phase}
+            </li>
+            <li>
+              Status Details: ${detail_status}
+            </li>
+            <li>
+              Catalyze SV Status: ${catalyze_status}
+            </li>
+            <li>
+              Score: ${score}
+            </li>
+            <li>
+              Catalyze SV Letter: ${catalyze_letter}
+            </li>
+            <li>
+              Presented to PAC: ${presented_date}
+            </li>
+            <li>
+              Next Meeting: ${next_meet}
+            </li>
+            <li>
+              City Documents: ${city_docs}
+            </li>
+            <li>
+              Website: ${website}
+            </li>
+          </ul>`
+      };
 
-        // loop through sidebar info contents to clear any existing content
+      // colors and labels to use for the legend
+      const project_phases = [{
+        name: 'Applied',
+        color: '#555'
+      }, {
+        name: 'Designing',
+        color: '#86619f'
+      }, {
+        name: 'Under Review',
+        color: '#268adb'
+      }, {
+        name: 'Approved',
+        color: '#358c29'
+      }];
+
+      // create the legend element
+      const legend_contents = generate_legend(project_phases);
+      legend.append(legend_contents);
+
+      // When a click event occurs on a marker in the projects layer, show info
+      map.on('click', CONSTANTS.projects_layer, (e) => {
+
+        // clear existing content by looping through sidebar info children
         while (sidebar_info.firstChild) {
             sidebar_info.firstChild.remove();
         }
 
         // animate sidebar info change if sidebar already open
         if (state.sidebar_open) {
-          // clear animation with an override
+          // block applied css animation with an override
           sidebar_info.style.animation ='none';
           // trigger reflow so css animation can play again
           void sidebar_info.offsetWidth;
-          // allow animation to play again
+          // allow defined css animation to play again
           sidebar_info.style.animation = null;
         } else {
           // otherwise just show the sidebar
           state.sidebar_open = true;
-          sidebar.classList.toggle('hidden');
+          sidebar.classList.toggle(CONSTANTS.hidden_class);
         }
 
-        // add the info to the sidebar
-        for (let property in currentProject.properties) {
-          if (property === 'Project_Name') {
-            // just need to set the title text to the heading element
-            title.textContent = Project_Name;
-            sidebar_info.prepend(title);
-          } else {
-            // create paragraphs for each property value
-            let paragraph = document.createElement('p');
-            paragraph.textContent = currentProject.properties[property];
-            sidebar_info.append(paragraph);
-          }
-        }
+        info_template.innerHTML = generate_sidebar(e.features[0].properties);
+        // makes the template element active so its visible in the dom
+        const active_template = info_template.content.cloneNode(true);
+        sidebar_info.append(active_template);
 
       });
 
       // hide the sidebar on click
       close_btn.addEventListener('click', () => {
         state.sidebar_open = false;
-        sidebar.classList.toggle('hidden');
+        sidebar.classList.toggle(CONSTANTS.hidden_class);
+      });
+
+      const popup = new mapboxgl.Popup({
+        closeButton: false
       });
 
       // Change the cursor to a pointer when the mouse is over the places layer.
-      map.on('mouseenter', 'projects', function () {
+      map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
         map.getCanvas().style.cursor = 'pointer';
+        popup.setLngLat(e.lngLat)
+          .setText(e.features[0].properties['Project Name'])
+          .addTo(map);
       });
 
       // Change it back to a pointer when it leaves.
-      map.on('mouseleave', 'projects', function () {
+      map.on('mouseleave', CONSTANTS.projects_layer, function (e) {
         map.getCanvas().style.cursor = '';
+        popup.remove();
       });
     });
 
