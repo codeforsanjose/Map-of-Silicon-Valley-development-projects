@@ -92,6 +92,7 @@
     background: #ffffffad;
     z-index: 100;
     padding: 1em;
+    transition: opacity 0.3s ease-in-out;
   }
 
   .legend ul {
@@ -110,25 +111,21 @@
 
   /* animation effects */
 
+  .transparent {
+    opacity: 0.5;
+  }
+
   .fade-in {
     animation: fadeIn ease 0.5s;
     -webkit-animation: fadeIn ease 0.5s;
-    -moz-animation: fadeIn ease 0.5s;
-    -o-animation: fadeIn ease 0.5s;
-    -ms-animation: fadeIn ease 0.5s;
   }
 
+  .fade-out {
+    animation: fadeOut ease 0.5s;
+    -webkit-animation: fadeOut ease 0.5s;
+  }
 
   @keyframes fadeIn{
-    0% {
-      opacity:0;
-    }
-    100% {
-      opacity:1;
-    }
-  }
-
-  @-moz-keyframes fadeIn {
     0% {
       opacity:0;
     }
@@ -146,21 +143,21 @@
     }
   }
 
-  @-o-keyframes fadeIn {
+  @keyframes fadeOut{
     0% {
-      opacity:0;
+      opacity:1;
     }
     100% {
-      opacity:1;
+      opacity:0;
     }
   }
 
-  @-ms-keyframes fadeIn {
+  @-webkit-keyframes fadeOut {
     0% {
-      opacity:0;
+      opacity:1;
     }
     100% {
-      opacity:1;
+      opacity:0;
     }
   }
   </style>
@@ -192,22 +189,127 @@
   </script>
 
   <script>
+    function generate_legend(legend_items) {
+      /*
+      Creates the dom elements for the map legend / key
+      Args: legend_items (array) - array of objs containing name/color info for each label
+      Return: legend ul element (obj)
+      */
+
+      const legend_list = document.createElement('ul');
+
+      legend_items.forEach((current_item) => {
+        let list_item = document.createElement('li');
+        let item_color = document.createElement('span');
+        list_item.textContent = current_item.name;
+        item_color.style.backgroundColor = current_item.color;
+        // so the color appears first
+        list_item.prepend(item_color);
+        legend_list.append(list_item);
+      });
+
+      return legend_list
+    }
+
+    function generate_sidebar(marker_properties) {
+      /*
+      Creates the sidebar info element dom contents.
+      Args: marker_properties (obj) - contains the properties for a given marker
+      Return: template string literal (str) - html string to set the info template element to
+      */
+
+      let { Address,
+             City,
+             State,
+             Phase,
+             "Project Name" : project_name,
+             "ZIP Code": Zip,
+             "Type of Project/ Overview" : project_type,
+             "Link to City Documents" : city_docs,
+             "Date Presented to PAC" : presented_date,
+             "Current Status in Catalyze SV" : catalyze_status,
+             "Next Public Meeting" : next_meet,
+             "Project Website" : website,
+             "Owner/Developer Name" : developer,
+             "Current Status With City" : detail_status,
+             "Catalyze SV's Scorecard" : score,
+             "Catalyze SV's Letter" : catalyze_letter,
+           } = marker_properties;
+
+      // template for the sidebar content
+      return `
+        <h3>${project_name}</h3>
+        <p>
+          ${Address}, ${City}, ${State} ${Zip}
+        </p>
+        <p>
+          ${project_type}
+        </p>
+        <ul>
+          <li>
+            Developer: ${developer}
+          </li>
+          <li>
+            Status: ${Phase}
+          </li>
+          <li>
+            Status Details: ${detail_status}
+          </li>
+          <li>
+            Catalyze SV Status: ${catalyze_status}
+          </li>
+          <li>
+            Score: ${score}
+          </li>
+          <li>
+            Catalyze SV Letter: ${catalyze_letter}
+          </li>
+          <li>
+            Presented to PAC: ${presented_date}
+          </li>
+          <li>
+            Next Meeting: ${next_meet}
+          </li>
+          <li>
+            City Documents: ${city_docs}
+          </li>
+          <li>
+            Website: ${website}
+          </li>
+        </ul>`
+    }
+
+    function show_name_popup(popup, map, current_project) {
+      /*
+      Show the given popup on the map using info from a project.
+      Args: popup (obj) - a mapbox Popup element instance
+            map (obj) - a mapbox Map instance
+            current_project (obj) - a specific map feature element w/ geometry and properties,
+            typically returned from an event listener -> event.features[0]
+      Return: na
+      */
+      popup.setLngLat(current_project.geometry.coordinates)
+           .setText(current_project.properties['Project Name'])
+           .addTo(map);
+    }
+
     const state = {
       sidebar_open: false
     }
     const CONSTANTS = {
-      hidden_class: 'hidden',
+      css: {
+        hidden: 'hidden',
+        transparent: 'transparent',
+        fade: 'fade-in'
+      },
       projects_layer: 'projects-catalyze-sv'
     }
 
-    // dom elements
+    // dom elements references
     const sidebar = document.querySelector('.sidebar');
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
     const legend = document.querySelector('.legend');
-
-    // to hold the sidebar elements before append
-    const info_template = document.createElement('template');
 
     // generate the map
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
@@ -221,95 +323,7 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
-      const generate_legend = (legend_items) => {
-        /*
-        Creates the dom elements for the map legend / key
-        Args: legend_items (array) - array of objs containing name/color info for each label
-        Return: legend ul element (obj)
-        */
-
-        const legend_list = document.createElement('ul');
-
-        legend_items.forEach((current_item) => {
-          let list_item = document.createElement('li');
-          let item_color = document.createElement('span');
-          list_item.textContent = current_item.name;
-          item_color.style.backgroundColor = current_item.color;
-          // so the color appears first
-          list_item.prepend(item_color);
-          legend_list.append(list_item);
-        });
-
-        return legend_list
-      };
-
-      const generate_sidebar = (marker_properties) => {
-        /*
-        Creates the sidebar info element dom contents.
-        Args: marker_properties (obj) - contains the properties for a given marker
-        Return: template string literal (str) - html string to set the info template element to
-        */
-
-        let { Address,
-               City,
-               State,
-               Phase,
-               "Project Name" : project_name,
-               "ZIP Code": Zip,
-               "Type of Project/ Overview" : project_type,
-               "Link to City Documents" : city_docs,
-               "Date Presented to PAC" : presented_date,
-               "Current Status in Catalyze SV" : catalyze_status,
-               "Next Public Meeting" : next_meet,
-               "Project Website" : website,
-               "Owner/Developer Name" : developer,
-               "Current Status With City" : detail_status,
-               "Catalyze SV's Scorecard" : score,
-               "Catalyze SV's Letter" : catalyze_letter,
-             } = marker_properties;
-
-        // template for the sidebar content
-        return `
-          <h3>${project_name}</h3>
-          <p>
-            ${Address}, ${City}, ${State} ${Zip}
-          </p>
-          <p>
-            ${project_type}
-          </p>
-          <ul>
-            <li>
-              Developer: ${developer}
-            </li>
-            <li>
-              Status: ${Phase}
-            </li>
-            <li>
-              Status Details: ${detail_status}
-            </li>
-            <li>
-              Catalyze SV Status: ${catalyze_status}
-            </li>
-            <li>
-              Score: ${score}
-            </li>
-            <li>
-              Catalyze SV Letter: ${catalyze_letter}
-            </li>
-            <li>
-              Presented to PAC: ${presented_date}
-            </li>
-            <li>
-              Next Meeting: ${next_meet}
-            </li>
-            <li>
-              City Documents: ${city_docs}
-            </li>
-            <li>
-              Website: ${website}
-            </li>
-          </ul>`
-      };
+      // MAP UI CREATION
 
       // colors and labels to use for the legend
       const project_phases = [{
@@ -330,8 +344,21 @@
       const legend_contents = generate_legend(project_phases);
       legend.append(legend_contents);
 
+      // store a popup reference to reassign/close/reopen in multiple events
+      let popup = new mapboxgl.Popup({
+        closeButton: false,
+        className: CONSTANTS.css.fade
+      });
+
+      // to hold the sidebar elements before append
+      const info_template = document.createElement('template');
+
+      // CONTROLS & INTERACTION
+
       // When a click event occurs on a marker in the projects layer, show info
       map.on('click', CONSTANTS.projects_layer, (e) => {
+
+        const current_project = e.features[0];
 
         // clear existing content by looping through sidebar info children
         while (sidebar_info.firstChild) {
@@ -349,38 +376,64 @@
         } else {
           // otherwise just show the sidebar
           state.sidebar_open = true;
-          sidebar.classList.toggle(CONSTANTS.hidden_class);
+          sidebar.classList.toggle(CONSTANTS.css.hidden);
+          legend.classList.toggle(CONSTANTS.css.transparent);
         }
 
-        info_template.innerHTML = generate_sidebar(e.features[0].properties);
+        info_template.innerHTML = generate_sidebar(current_project.properties);
         // makes the template element active so its visible in the dom
         const active_template = info_template.content.cloneNode(true);
         sidebar_info.append(active_template);
 
+        // need to instantiate a new Popup otherwise the mousover popups won't
+        // allow this click triggered one to show
+        popup = new mapboxgl.Popup({
+          closeButton: false,
+          className: CONSTANTS.css.fade
+        });
+
+        show_name_popup(popup, map, current_project);
       });
 
-      // hide the sidebar on click
       close_btn.addEventListener('click', () => {
+        // hide the sidebar on click
         state.sidebar_open = false;
-        sidebar.classList.toggle(CONSTANTS.hidden_class);
+        sidebar.classList.toggle(CONSTANTS.css.hidden);
+        // deemphasize the legend
+        legend.classList.toggle(CONSTANTS.css.transparent);
+
+        // keep reference to current popup element to remove after animation end
+        const current_popup = popup.getElement();
+        current_popup.classList.toggle('fade-out');
+
+        // named animationend callback so listener can be deleted to prevent memory leaks
+        const remove_popup = (e) => {
+          current_popup.removeEventListener('animationend', remove_popup);
+          current_popup.remove();
+        };
+
+        // only remove popup after css animation completes
+        current_popup.addEventListener('animationend', remove_popup);
       });
 
-      const popup = new mapboxgl.Popup({
-        closeButton: false
-      });
-
-      // Change the cursor to a pointer when the mouse is over the places layer.
       map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
+        // Change the cursor to a pointer when the mouse is over the projects layer
         map.getCanvas().style.cursor = 'pointer';
-        popup.setLngLat(e.lngLat)
-          .setText(e.features[0].properties['Project Name'])
-          .addTo(map);
+
+        // don't want mouseovers to change the opened popup when sidebar is open
+        if (!state.sidebar_open) {
+          show_name_popup(popup, map, e.features[0]);
+        }
       });
 
-      // Change it back to a pointer when it leaves.
       map.on('mouseleave', CONSTANTS.projects_layer, function (e) {
+        // Change it back to a cursor when it leaves
         map.getCanvas().style.cursor = '';
-        popup.remove();
+
+        // don't want mouseovers to change the opened popup when sidebar is open
+        if (!state.sidebar_open) {
+          popup.remove();
+        }
       });
     });
 
