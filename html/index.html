@@ -43,10 +43,10 @@
     right: 1em;
     top: 1em;
     bottom: 1em;
-    width: 25vw;
+    width: 30vw;
     min-width: 12em;
     transform: translateX(0);
-    transition: transform 0.4s ease-in-out;
+    transition: transform 0.3s ease-in-out;
     z-index: 200;
   }
 
@@ -93,6 +93,7 @@
     z-index: 100;
     padding: 1em;
     transition: opacity 0.3s ease-in-out;
+    box-shadow: 1px 1px 3px #00000069;
   }
 
   .legend ul {
@@ -109,6 +110,12 @@
     margin-right: 0.5em;
   }
 
+  .legend-title {
+    margin: 0 0 0.5em;
+    font-style: italic;
+    font-weight: normal;
+  }
+
   /* animation effects */
 
   .transparent {
@@ -116,13 +123,13 @@
   }
 
   .fade-in {
-    animation: fadeIn ease 0.5s;
-    -webkit-animation: fadeIn ease 0.5s;
+    animation: fadeIn ease 0.3s;
+    -webkit-animation: fadeIn ease 0.3s;
   }
 
   .fade-out {
-    animation: fadeOut ease 0.5s;
-    -webkit-animation: fadeOut ease 0.5s;
+    animation: fadeOut ease 0.1s;
+    -webkit-animation: fadeOut ease 0.1s;
   }
 
   @keyframes fadeIn{
@@ -189,23 +196,49 @@
   </script>
 
   <script>
+    function getUniqueFeatures(array, comparatorProperty) {
+      var existingFeatureKeys = {};
+      // Because features come from tiled vector data, feature geometries may be split
+      // or duplicated across tile boundaries and, as a result, features may appear
+      // multiple times in query results.
+      var uniqueFeatures = array.filter(function(el) {
+      if (existingFeatureKeys[el.properties[comparatorProperty]]) {
+        return false;
+      } else {
+        existingFeatureKeys[el.properties[comparatorProperty]] = true;
+        return true;
+      }
+      });
+
+      return uniqueFeatures;
+    }
+
     function generate_legend(legend_items) {
       /*
-      Creates the dom elements for the map legend / key
+      Creates and populates the dom elements for the map legend / key
       Args: legend_items (array) - array of objs containing name/color info for each label
       Return: legend ul element (obj)
       */
-
       const legend_list = document.createElement('ul');
 
       legend_items.forEach((current_item) => {
-        let list_item = document.createElement('li');
-        let item_color = document.createElement('span');
-        list_item.textContent = current_item.name;
-        item_color.style.backgroundColor = current_item.color;
-        // so the color appears first
-        list_item.prepend(item_color);
-        legend_list.append(list_item);
+        if (!current_item.name) {
+          // create the legend title
+          const title = document.createElement('h4');
+          title.classList.add(current_item.css);
+          title.textContent = current_item.title;
+          legend_list.prepend(title);
+        } else {
+          // create labels and key colors per legend item
+          let item_color = document.createElement('span');
+          item_color.style.backgroundColor = current_item.color;
+          let list_item = document.createElement('li');
+          list_item.textContent = current_item.name;
+
+          // so the color appears first
+          list_item.prepend(item_color);
+          legend_list.append(list_item);
+        }
       });
 
       return legend_list
@@ -217,7 +250,6 @@
       Args: marker_properties (obj) - contains the properties for a given marker
       Return: template string literal (str) - html string to set the info template element to
       */
-
       let { Address,
              City,
              State,
@@ -240,7 +272,9 @@
       return `
         <h3>${project_name}</h3>
         <p>
-          ${Address}, ${City}, ${State} ${Zip}
+          <em>
+            ${Address}, ${City}, ${State} ${Zip}
+          </em>
         </p>
         <p>
           ${project_type}
@@ -279,19 +313,69 @@
         </ul>`
     }
 
-    function show_name_popup(popup, map, current_project) {
+    function make_name_popup(current_project) {
       /*
       Show the given popup on the map using info from a project.
-      Args: popup (obj) - a mapbox Popup element instance
-            map (obj) - a mapbox Map instance
-            current_project (obj) - a specific map feature element w/ geometry and properties,
+      Args: current_project (obj) - a specific map feature element w/ geometry and properties,
             typically returned from an event listener -> event.features[0]
+      Return: Popup (obj) - instance containing the coordinates and text for the marker
+      */
+      // need to instantiate a new Popup otherwise the mousover popups won't
+      // allow the click triggered one to show and it'll interfere with animations
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        className: CONSTANTS.css.fade
+      });
+
+      popup.setLngLat(current_project.geometry.coordinates)
+           .setText(current_project.properties['Project Name']);
+
+      return popup
+    }
+
+    function play_sidebar_animation(sidebar_open) {
+      /*
+      Plays the corresponding sidebar animation for the sidebar dom element
+      depending on if the sidebar is already open or not.
+      Args: sidebar_open (bool) - whether the sidebar is open or not
       Return: na
       */
-      popup.setLngLat(current_project.geometry.coordinates)
-           .setText(current_project.properties['Project Name'])
-           .addTo(map);
+      // animate sidebar info change if sidebar already open
+      if (sidebar_open) {
+        // block applied css animation with an override
+        sidebar_info.style.animation ='none';
+        // trigger reflow so css animation can play again
+        void sidebar_info.offsetWidth;
+        // allow defined css animation to play again
+        sidebar_info.style.animation = null;
+      } else {
+        // otherwise just show the sidebar
+        state.sidebar_open = true;
+        sidebar.classList.toggle(CONSTANTS.css.hidden);
+        legend.classList.toggle(CONSTANTS.css.transparent);
+      }
     }
+
+    function animate_popup_removal(popup) {
+      /*
+      Animates the removal of the popup by waiting for the animation to complete
+      before removal.
+      Args: popup (obj) - popup dom element to be animated/removed
+      Return: na
+      */
+      popup.classList.toggle(CONSTANTS.css.fade_out);
+
+      // named animationend callback so listener can be deleted to prevent memory leaks
+      const remove_popup = (e) => {
+        popup.removeEventListener('animationend', remove_popup);
+        popup.remove();
+      };
+
+      // only remove popup after css animation completes
+      popup.addEventListener('animationend', remove_popup);
+    }
+
+    // =============== APP LOGIC ===============
 
     const state = {
       sidebar_open: false
@@ -300,9 +384,12 @@
       css: {
         hidden: 'hidden',
         transparent: 'transparent',
-        fade: 'fade-in'
+        fade: 'fade-in',
+        fade_out: 'fade-out',
+        legend_title: 'legend-title'
       },
-      projects_layer: 'projects-catalyze-sv'
+      projects_layer: 'projects-catalyze-sv',
+      legend_title: 'Status With City'
     }
 
     // dom elements references
@@ -323,14 +410,17 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
-      // MAP UI CREATION
+      // ========= MAP UI CREATION ============
 
       // colors and labels to use for the legend
-      const project_phases = [{
-        name: 'Applied',
+      const legend_data = [{
+        title: 'Status With City',
+        css: 'legend-title'
+      }, {
+        name: 'Application',
         color: '#555'
       }, {
-        name: 'Designing',
+        name: 'In Design',
         color: '#86619f'
       }, {
         name: 'Under Review',
@@ -341,8 +431,8 @@
       }];
 
       // create the legend element
-      const legend_contents = generate_legend(project_phases);
-      legend.append(legend_contents);
+      const legend_elements = generate_legend(legend_data);
+      legend.append(legend_elements);
 
       // store a popup reference to reassign/close/reopen in multiple events
       let popup = new mapboxgl.Popup({
@@ -353,7 +443,17 @@
       // to hold the sidebar elements before append
       const info_template = document.createElement('template');
 
-      // CONTROLS & INTERACTION
+      // Add zoom and rotation controls to the map.
+      map.addControl(new mapboxgl.NavigationControl());
+
+      map.on('moveend', function() {
+        const features = map.queryRenderedFeatures({layers: ['projects-catalyze-sv']});
+        console.log(features);
+        const unique_features = getUniqueFeatures(features, "Project Name");
+        console.log(unique_features);
+      });
+
+      // ======= CONTROLS & INTERACTION ========
 
       // When a click event occurs on a marker in the projects layer, show info
       map.on('click', CONSTANTS.projects_layer, (e) => {
@@ -365,34 +465,15 @@
             sidebar_info.firstChild.remove();
         }
 
-        // animate sidebar info change if sidebar already open
-        if (state.sidebar_open) {
-          // block applied css animation with an override
-          sidebar_info.style.animation ='none';
-          // trigger reflow so css animation can play again
-          void sidebar_info.offsetWidth;
-          // allow defined css animation to play again
-          sidebar_info.style.animation = null;
-        } else {
-          // otherwise just show the sidebar
-          state.sidebar_open = true;
-          sidebar.classList.toggle(CONSTANTS.css.hidden);
-          legend.classList.toggle(CONSTANTS.css.transparent);
-        }
+        // animate sidebar changes according to if the sidebar is already open
+        play_sidebar_animation(state.sidebar_open);
 
         info_template.innerHTML = generate_sidebar(current_project.properties);
         // makes the template element active so its visible in the dom
         const active_template = info_template.content.cloneNode(true);
         sidebar_info.append(active_template);
 
-        // need to instantiate a new Popup otherwise the mousover popups won't
-        // allow this click triggered one to show
-        popup = new mapboxgl.Popup({
-          closeButton: false,
-          className: CONSTANTS.css.fade
-        });
-
-        show_name_popup(popup, map, current_project);
+        popup = make_name_popup(current_project).addTo(map);
       });
 
       close_btn.addEventListener('click', () => {
@@ -402,18 +483,8 @@
         // deemphasize the legend
         legend.classList.toggle(CONSTANTS.css.transparent);
 
-        // keep reference to current popup element to remove after animation end
-        const current_popup = popup.getElement();
-        current_popup.classList.toggle('fade-out');
-
-        // named animationend callback so listener can be deleted to prevent memory leaks
-        const remove_popup = (e) => {
-          current_popup.removeEventListener('animationend', remove_popup);
-          current_popup.remove();
-        };
-
-        // only remove popup after css animation completes
-        current_popup.addEventListener('animationend', remove_popup);
+        // remove current popup element after animation ends
+        animate_popup_removal(popup.getElement());
       });
 
       map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
@@ -422,7 +493,7 @@
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          show_name_popup(popup, map, e.features[0]);
+          popup = make_name_popup(e.features[0]).addTo(map);
         }
       });
 
@@ -432,7 +503,8 @@
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          popup.remove();
+          // popup.remove();
+          animate_popup_removal(popup.getElement());
         }
       });
     });
