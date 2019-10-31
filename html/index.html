@@ -43,7 +43,7 @@
     right: 1em;
     top: 1em;
     bottom: 1em;
-    width: 30vw;
+    width: 40%;
     min-width: 12em;
     transform: translateX(0);
     transition: transform 0.3s ease-in-out;
@@ -116,7 +116,32 @@
     font-weight: normal;
   }
 
-  /* animation effects */
+  /* List View */
+
+  .list-view {
+    position: absolute;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  .list-content {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .list-content li {
+    background: #fff;
+    padding: 1em;
+    border-bottom: 1px solid #000;
+  }
+
+  /* animation / effects */
+
+  .darken {
+    -webkit-filter: brightness(0.8);
+    filter: brightness(0.8);
+  }
 
   .transparent {
     opacity: 0.5;
@@ -313,6 +338,19 @@
         </ul>`
     }
 
+    function generate_list_view(map_features) {
+      const list = document.createElement('ul');
+      list.classList.add('list-content');
+
+      map_features.forEach((current_item) => {
+        let current_feature = document.createElement('li');
+        current_feature.textContent = current_item.properties["Project Name"];
+        list.append(current_feature)
+      });
+
+      return list;
+    }
+
     function make_name_popup(current_project) {
       /*
       Show the given popup on the map using info from a project.
@@ -378,18 +416,17 @@
     // =============== APP LOGIC ===============
 
     const state = {
-      sidebar_open: false
+      sidebar_open: false,
+      markers_saved: false
     }
     const CONSTANTS = {
       css: {
         hidden: 'hidden',
         transparent: 'transparent',
         fade: 'fade-in',
-        fade_out: 'fade-out',
-        legend_title: 'legend-title'
+        fade_out: 'fade-out'
       },
-      projects_layer: 'projects-catalyze-sv',
-      legend_title: 'Status With City'
+      projects_layer: 'projects-catalyze-sv'
     }
 
     // dom elements references
@@ -397,6 +434,7 @@
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
     const legend = document.querySelector('.legend');
+    const list_view = document.querySelector('.list-view');
 
     // generate the map
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
@@ -404,7 +442,7 @@
       container: 'map',
       style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
       center: [-121.898395, 37.322972],
-      zoom: 10
+      zoom: 11
     });
 
     // wait for map to finish load before executing map functions
@@ -446,11 +484,16 @@
       // Add zoom and rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
 
-      map.on('moveend', function() {
-        const features = map.queryRenderedFeatures({layers: ['projects-catalyze-sv']});
-        console.log(features);
-        const unique_features = getUniqueFeatures(features, "Project Name");
-        console.log(unique_features);
+      map.on('idle', function() {
+        if(!state.markers_saved) {
+          const features = map.queryRenderedFeatures({layers: ['projects-catalyze-sv']});
+          console.log(features);
+          const unique_features = getUniqueFeatures(features, "Project Name");
+          console.log(unique_features);
+          const projects_list = generate_list_view(unique_features);
+          list_view.append(projects_list);
+          state.markers_saved = true;
+        }
       });
 
       // ======= CONTROLS & INTERACTION ========
