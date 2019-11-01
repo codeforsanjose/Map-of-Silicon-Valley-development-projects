@@ -28,6 +28,8 @@
 
   #map {
     position:absolute; top:0; bottom:0; width:100%; z-index: 1;
+    transition: filter 0.3s;
+    will-change: filter;
   }
 
   /* layout */
@@ -36,13 +38,21 @@
     margin: 0;
   }
 
+  /* Map View/List View picker menu */
+
+  .view-menu {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   /* Flyout sidebar where marker info is displayed */
 
   .sidebar {
     position: absolute;
     right: 1em;
     top: 1em;
-    bottom: 1em;
     width: 40%;
     min-width: 12em;
     transform: translateX(0);
@@ -148,8 +158,8 @@
   }
 
   .fade-in {
-    animation: fadeIn ease 0.3s;
-    -webkit-animation: fadeIn ease 0.3s;
+    animation: fadeIn ease 0.2s;
+    -webkit-animation: fadeIn ease 0.2s;
   }
 
   .fade-out {
@@ -204,6 +214,7 @@
 
   <!-- Add your site or application content here -->
   <main id="map"></main>
+  <nav class="view-menu"></nav>
   <aside class="sidebar hidden">
     <div class="content">
       <button class="close-btn">X</button>
@@ -222,11 +233,11 @@
 
   <script>
     function getUniqueFeatures(array, comparatorProperty) {
-      var existingFeatureKeys = {};
+      const existingFeatureKeys = {};
       // Because features come from tiled vector data, feature geometries may be split
       // or duplicated across tile boundaries and, as a result, features may appear
       // multiple times in query results.
-      var uniqueFeatures = array.filter(function(el) {
+      const uniqueFeatures = array.filter(function(el) {
       if (existingFeatureKeys[el.properties[comparatorProperty]]) {
         return false;
       } else {
@@ -238,11 +249,38 @@
       return uniqueFeatures;
     }
 
+    function generate_view_menu() {
+      /*
+      */
+      const fragment = document.createDocumentFragment();
+
+      const list_btn = document.createElement('button');
+      const map_btn = document.createElement('button');
+
+      list_btn.textContent = 'List View';
+      map_btn.textContent = 'Map View'
+
+      list_btn.classList.add('show-list');
+      map_btn.classList.add('show-map');
+
+      list_btn.addEventListener('click', ()=>{
+        console.log('list clicked');
+      });
+
+      map_btn.addEventListener('click', ()=>{
+        console.log('map clicked');
+      });
+
+      fragment.append(list_btn, map_btn);
+
+      return fragment;
+    }
+
     function generate_legend(legend_items) {
       /*
       Creates and populates the dom elements for the map legend / key
       Args: legend_items (array) - array of objs containing name/color info for each label
-      Return: legend ul element (obj)
+      Return: legend ul dom element (obj)
       */
       const legend_list = document.createElement('ul');
 
@@ -339,11 +377,19 @@
     }
 
     function generate_list_view(map_features) {
+      /*
+      Generates the ul dom element containing the list view of the projects on the
+      map based on the map feature array passed in.
+      Args: map_features (arr) - array of layer map geojson features from a mapbox layer
+      Return: list (obj) - ul dom element of the list view items
+      */
       const list = document.createElement('ul');
       list.classList.add('list-content');
 
       map_features.forEach((current_item) => {
         let current_feature = document.createElement('li');
+        current_feature.setAttribute('data-name', current_item.properties["Project Name"])
+        // need to add a click handler event
         current_feature.textContent = current_item.properties["Project Name"];
         list.append(current_feature)
       });
@@ -391,6 +437,7 @@
         state.sidebar_open = true;
         sidebar.classList.toggle(CONSTANTS.css.hidden);
         legend.classList.toggle(CONSTANTS.css.transparent);
+        map_element.classList.toggle('darken');
       }
     }
 
@@ -420,6 +467,8 @@
       markers_saved: false
     }
     const CONSTANTS = {
+      mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
+      mapbox_style_url: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
       css: {
         hidden: 'hidden',
         transparent: 'transparent',
@@ -428,30 +477,10 @@
       },
       projects_layer: 'projects-catalyze-sv'
     }
-
-    // dom elements references
-    const sidebar = document.querySelector('.sidebar');
-    const sidebar_info = document.querySelector('.info');
-    const close_btn = document.querySelector('.close-btn');
-    const legend = document.querySelector('.legend');
-    const list_view = document.querySelector('.list-view');
-
-    // generate the map
-    mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ';
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
-      center: [-121.898395, 37.322972],
-      zoom: 11
-    });
-
-    // wait for map to finish load before executing map functions
-    map.on('load', () => {
-
-      // ========= MAP UI CREATION ============
-
+    const data = {
+      features: [],
       // colors and labels to use for the legend
-      const legend_data = [{
+      legend: [{
         title: 'Status With City',
         css: 'legend-title'
       }, {
@@ -466,10 +495,37 @@
       }, {
         name: 'Approved',
         color: '#358c29'
-      }];
+      }]
+    }
+
+    // dom elements references
+    const map_element = document.querySelector('#map');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebar_info = document.querySelector('.info');
+    const close_btn = document.querySelector('.close-btn');
+    const legend = document.querySelector('.legend');
+    const list_view = document.querySelector('.list-view');
+    const view_menu = document.querySelector('.view-menu');
+
+    // generate the map
+    mapboxgl.accessToken = CONSTANTS.mapbox_key;
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: CONSTANTS.mapbox_style_url,
+      center: [-121.898395, 37.322972],
+      zoom: 11
+    });
+
+    // wait for map to finish load before executing map functions
+    map.on('load', () => {
+
+      // ========= MAP UI CREATION ============
+
+      // create the view type menu
+      view_menu.append(generate_view_menu());
 
       // create the legend element
-      const legend_elements = generate_legend(legend_data);
+      const legend_elements = generate_legend(data.legend);
       legend.append(legend_elements);
 
       // store a popup reference to reassign/close/reopen in multiple events
@@ -484,13 +540,16 @@
       // Add zoom and rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
 
-      map.on('idle', function() {
+      map.on('idle', () => {
+        // only need to get the features once
         if(!state.markers_saved) {
-          const features = map.queryRenderedFeatures({layers: ['projects-catalyze-sv']});
-          console.log(features);
-          const unique_features = getUniqueFeatures(features, "Project Name");
-          console.log(unique_features);
-          const projects_list = generate_list_view(unique_features);
+          // grab the features on the projects layer
+          const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.projects_layer]});
+          // filter any duplicates out by name and save the features for later use
+          data.features = getUniqueFeatures(rendered_features, "Project Name");
+          console.log(data.features);
+
+          const projects_list = generate_list_view(data.features);
           list_view.append(projects_list);
           state.markers_saved = true;
         }
@@ -525,6 +584,7 @@
         sidebar.classList.toggle(CONSTANTS.css.hidden);
         // deemphasize the legend
         legend.classList.toggle(CONSTANTS.css.transparent);
+        map_element.classList.toggle('darken');
 
         // remove current popup element after animation ends
         animate_popup_removal(popup.getElement());
