@@ -331,48 +331,55 @@
              "Catalyze SV's Letter" : catalyze_letter,
            } = marker_properties;
 
+      // show/hide some info dependent on if it is available in dataset
+      const catalyze_letter_html = catalyze_letter && catalyze_letter !== ''
+          ? `<li><a href=${catalyze_letter} target="_blank" rel="noreferrer">Catalyze SV's Letter</a></li>`
+          : '';
+      const catalyze_scorecard_html = score && score !== ''
+          ? `<li><a href=${score} target="_blank" rel="noreferrer">View Catalyze SV Scorecard</a></li>`
+          : '';
+      const website_html = website && website !== ''
+          ? `<li><a href=${website} target="_blank" rel="noreferrer">View Project Website</a></li>`
+          : '';
+      const presented_date_html = presented_date && presented_date !== ''
+          ? `<li>Presented to PAC on: ${presented_date}</li>`
+          : '';
+      const catalyze_status_html = catalyze_status && catalyze_status !== ''
+          ? `<li>Catalyze SV Review Status: ${catalyze_status}</li>`
+          : '';
+      const next_meet_html = next_meet && next_meet !== ''
+          ? `<li>Next Public Meeting: ${next_meet}</li>`
+          : `<li>Next Public Meeting: TBD</li>`;
+      const city_docs_html = city_docs && city_docs !== ''
+          ? `<li><a href=${city_docs} target="_blank" rel="noreferrer">View City Documents</a></li>`
+          : '';
+
       // template for the sidebar content
       return `
         <h3>${project_name}</h3>
         <p>
-          <em>
-            ${Address}, ${City}, ${State} ${Zip}
-          </em>
+          ${Address}, ${City}, ${State} ${Zip}
         </p>
         <p>
           ${project_type}
         </p>
         <ul>
+          ${catalyze_status_html}
+          ${catalyze_scorecard_html}
+          ${catalyze_letter_html}
           <li>
-            Developer: ${developer}
+            Owner/Developer: ${developer}
           </li>
           <li>
-            Status: ${Phase}
+            Status With City: ${Phase}
           </li>
           <li>
             Status Details: ${detail_status}
           </li>
-          <li>
-            Catalyze SV Status: ${catalyze_status}
-          </li>
-          <li>
-            Score: ${score}
-          </li>
-          <li>
-            Catalyze SV Letter: ${catalyze_letter}
-          </li>
-          <li>
-            Presented to PAC: ${presented_date}
-          </li>
-          <li>
-            Next Meeting: ${next_meet}
-          </li>
-          <li>
-            City Documents: ${city_docs}
-          </li>
-          <li>
-            Website: ${website}
-          </li>
+          ${presented_date_html}
+          ${next_meet_html}
+          ${city_docs_html}
+          ${website_html}
         </ul>`
     }
 
@@ -523,6 +530,10 @@
 
       // create the view type menu
       view_menu.append(generate_view_menu());
+      // catch the target through event bubbling
+      view_menu.addEventListener('click', (e)=>{
+        console.log(e.target.classList);
+      });
 
       // create the legend element
       const legend_elements = generate_legend(data.legend);
