@@ -172,18 +172,16 @@
     z-index: 2;
     position: absolute;
     overflow-y: auto;
-    height: 100%;
+    bottom: 0;
+    /* equal to the height of the view menu bar background */
+    top: 3.25em;
     width: 100%;
     transform: translateX(-110%);
     will-change: transform;
     transition: transform 0.2s ease;
-    margin-top: 3.25em;
   }
 
   .list-header {
-    /* padding: 1.625em;
-    border-bottom: 1px solid #000;
-    background: #000; */
   }
 
   .list-view.list-active {
