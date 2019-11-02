@@ -21,6 +21,10 @@
 
   /* general styles */
 
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     overflow: hidden;
     font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
@@ -42,9 +46,21 @@
 
   .view-menu {
     position: absolute;
-    z-index: 2;
+    top: 0.5em;
+    z-index: 3;
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .view-btn {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5em;
+    cursor: pointer;
+  }
+
+  .view-btn:hover {
+    border: 1px solid #000;
   }
 
   /* Flyout sidebar where marker info is displayed */
@@ -100,7 +116,7 @@
     right: 1em;
     bottom: 1em;
     background: #ffffffad;
-    z-index: 100;
+    z-index: 2;
     padding: 1em;
     transition: opacity 0.3s ease-in-out;
     box-shadow: 1px 1px 3px #00000069;
@@ -132,6 +148,17 @@
     position: absolute;
     overflow-y: auto;
     height: 100%;
+  }
+
+  .list-header {
+    padding: 1.625em;
+    border-bottom: 1px solid #000;
+  }
+
+  .list-view.list-active {
+    z-index: 2;
+    background: #fff;
+    width: 100%;
   }
 
   .list-content {
@@ -224,6 +251,7 @@
   <aside class="legend">
   </aside>
   <section class="list-view">
+    <div class="list-header"></div>
   </section>
 
   <script>
@@ -249,31 +277,20 @@
       return uniqueFeatures;
     }
 
-    function generate_view_menu() {
+    function generate_view_menu_item(view_type, id) {
       /*
+      Creates a view menu navigation item to select the view type.
+      Args: view_type (str) - the type of view to show for this button
+            id (str) - the id of the view to retrieve in the event listener
+      Return: btn (obj) - button dom element w/ attributes set
       */
-      const fragment = document.createDocumentFragment();
 
-      const list_btn = document.createElement('button');
-      const map_btn = document.createElement('button');
+      const btn = document.createElement('button');
+      btn.textContent = view_type;
+      btn.setAttribute('data-view', id);
+      btn.classList.add('view-btn');
 
-      list_btn.textContent = 'List View';
-      map_btn.textContent = 'Map View'
-
-      list_btn.classList.add('show-list');
-      map_btn.classList.add('show-map');
-
-      list_btn.addEventListener('click', ()=>{
-        console.log('list clicked');
-      });
-
-      map_btn.addEventListener('click', ()=>{
-        console.log('map clicked');
-      });
-
-      fragment.append(list_btn, map_btn);
-
-      return fragment;
+      return btn;
     }
 
     function generate_legend(legend_items) {
@@ -488,20 +505,27 @@
       features: [],
       // colors and labels to use for the legend
       legend: [{
-        title: 'Status With City',
-        css: 'legend-title'
-      }, {
-        name: 'Application',
-        color: '#555'
-      }, {
-        name: 'In Design',
-        color: '#86619f'
-      }, {
-        name: 'Under Review',
-        color: '#268adb'
-      }, {
-        name: 'Approved',
-        color: '#358c29'
+          title: 'Status With City',
+          css: 'legend-title'
+        }, {
+          name: 'Application',
+          color: '#555'
+        }, {
+          name: 'In Design',
+          color: '#86619f'
+        }, {
+          name: 'Under Review',
+          color: '#268adb'
+        }, {
+          name: 'Approved',
+          color: '#358c29'
+      }],
+      view_types: [{
+          name: 'List View',
+          id: 'list'
+        }, {
+          name: 'Map View',
+          id: 'map'
       }]
     }
 
@@ -529,11 +553,11 @@
       // ========= MAP UI CREATION ============
 
       // create the view type menu
-      view_menu.append(generate_view_menu());
-      // catch the target through event bubbling
-      view_menu.addEventListener('click', (e)=>{
-        console.log(e.target.classList);
+      const view_contents = document.createDocumentFragment();
+      data.view_types.forEach((current_item) => {
+        view_contents.append(generate_view_menu_item(current_item.name, current_item.id));
       });
+      view_menu.append(view_contents);
 
       // create the legend element
       const legend_elements = generate_legend(data.legend);
@@ -567,6 +591,20 @@
       });
 
       // ======= CONTROLS & INTERACTION ========
+
+      // catch the target through event bubbling
+      view_menu.addEventListener('click', (e) => {
+        const view_type = e.target.getAttribute('data-view');
+
+        switch (view_type) {
+          case 'list':
+            list_view.classList.add('list-active');
+            break;
+          case 'map':
+            list_view.classList.remove('list-active');
+            break;
+        }
+      });
 
       // When a click event occurs on a marker in the projects layer, show info
       map.on('click', CONSTANTS.projects_layer, (e) => {
