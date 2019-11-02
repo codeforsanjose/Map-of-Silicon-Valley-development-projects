@@ -50,13 +50,21 @@
   .view-menu {
     text-align: center;
     position: absolute;
-    top: 0.5em;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5em;
+    pointer-events: none;
     z-index: 3;
-    left: 50%;
-    transform: translateX(-50%);
+    transition: background-color 0.2s;
+  }
+
+  .view-menu.list {
+    background-color: #000;
   }
 
   .view-btn {
+    pointer-events: auto;
     background: #fff;
     border: 1px solid #ccc;
     padding: 0.5em;
@@ -169,17 +177,17 @@
     transform: translateX(-110%);
     will-change: transform;
     transition: transform 0.2s ease;
+    margin-top: 3.25em;
   }
 
   .list-header {
-    padding: 1.625em;
+    /* padding: 1.625em;
     border-bottom: 1px solid #000;
-    background: #000;
+    background: #000; */
   }
 
   .list-view.list-active {
     background: #fff;
-    /* width: 100%; */
     transform: translateX(0);
   }
 
@@ -193,6 +201,11 @@
     background: #fff;
     padding: 1em;
     border-bottom: 1px solid #ccc;
+    cursor: pointer;
+  }
+
+  .list-content li:hover {
+    background: #ddd;
   }
 
   .list-content .status {
@@ -336,7 +349,7 @@
       /*
       Creates and populates the dom elements for the map legend / key
       Args: phases (obj) - obj containing name/color info for each label
-            order (array) -  array of keys = phases showing order to output
+            order (array) - array of keys = phases showing order to output
       Return: legend ul dom element (obj)
       */
       const legend_list = document.createElement('ul');
@@ -449,21 +462,25 @@
       const list = document.createElement('ul');
       list.classList.add('list-content');
 
-      map_features.forEach((current_item) => {
+      map_features.forEach((current_item, i) => {
+        let current_props = current_item.properties;
         let current_feature = document.createElement('li');
-        current_feature.setAttribute('data-name', current_item.properties["Project Name"]);
+        // store the name to know which makrer's info to retrieve
+        current_feature.setAttribute('data-name', current_props["Project Name"]);
+        current_feature.setAttribute('data-index', i);
 
         let status_tag = document.createElement('span');
-        status_tag.textContent = current_item.properties["Phase"];
+        status_tag.textContent = current_props["Phase"];
         status_tag.classList.add('status');
-        status_tag.style.backgroundColor = phases[current_item.properties['Phase']];
+        // recolor according to phase
+        status_tag.style.backgroundColor = phases[current_props['Phase']];
 
         let title = document.createElement('h3');
-        title.textContent = current_item.properties["Project Name"];
+        title.textContent = current_props["Project Name"];
         title.classList.add('title');
 
         let address = document.createElement('p');
-        address.textContent = current_item.properties["Address"];
+        address.textContent = current_props["Address"];
         address.classList.add('address');
         current_feature.append(status_tag, title, address);
 
@@ -652,6 +669,7 @@
       view_menu.addEventListener('click', (e) => {
         const view_type = e.target.getAttribute('data-view');
 
+        // inactive style every button before styling the active one
         [...view_menu.children].forEach((current) => {
           current.classList.remove('active');
         });
@@ -660,14 +678,19 @@
         switch (view_type) {
           case 'list':
             list_view.classList.add('list-active');
+            view_menu.classList.add('list');
             break;
           case 'map':
             list_view.classList.remove('list-active');
+            view_menu.classList.remove('list');
             break;
         }
       });
 
       list_view.addEventListener('click', (e) => {
+        const current_project_id = e.target.closest('li').getAttribute('data-index');
+
+        console.log(data.features[current_project_id]);
 
         // TODO
         console.log(e.target.closest('li'));
@@ -725,7 +748,6 @@
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
           popup.remove();
-          // animate_popup_removal(popup.getElement());
         }
       });
     });
