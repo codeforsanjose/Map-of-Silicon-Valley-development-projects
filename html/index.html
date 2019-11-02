@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700&display=swap" rel="stylesheet">
   <!-- Mapbox -->
   <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
   <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.css' rel='stylesheet' />
@@ -27,7 +29,8 @@
 
   body {
     overflow: hidden;
-    font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+    font-family: 'Lato',Arial,Helvetica Neue,Helvetica,sans-serif;
+    color: #283B62;
   }
 
   #map {
@@ -59,8 +62,20 @@
     cursor: pointer;
   }
 
+  .view-btn.active {
+    background: #283B62;
+    color: #fff;
+    text-shadow: -1px -1px #000;
+    border: 1px solid #000;
+  }
+
   .view-btn:hover {
     border: 1px solid #000;
+    opacity: 0.8;
+  }
+
+  .view-btn.active:hover {
+    opacity: 1;
   }
 
   /* Flyout sidebar where marker info is displayed */
@@ -153,6 +168,7 @@
   .list-header {
     padding: 1.625em;
     border-bottom: 1px solid #000;
+    background: #000;
   }
 
   .list-view.list-active {
@@ -170,7 +186,7 @@
   .list-content li {
     background: #fff;
     padding: 1em;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #ccc;
   }
 
   /* animation / effects */
@@ -555,9 +571,15 @@
       // create the view type menu
       const view_contents = document.createDocumentFragment();
       data.view_types.forEach((current_item) => {
-        view_contents.append(generate_view_menu_item(current_item.name, current_item.id));
+        let view_btn = generate_view_menu_item(current_item.name, current_item.id);
+        // have map view button shown as active by default
+        if (current_item.name === 'Map View') {
+          view_btn.classList.add('active');
+        }
+        view_contents.append(view_btn);
       });
       view_menu.append(view_contents);
+
 
       // create the legend element
       const legend_elements = generate_legend(data.legend);
@@ -596,6 +618,11 @@
       view_menu.addEventListener('click', (e) => {
         const view_type = e.target.getAttribute('data-view');
 
+        [...view_menu.children].forEach((current) => {
+          current.classList.remove('active');
+        });
+        e.target.classList.add('active');
+
         switch (view_type) {
           case 'list':
             list_view.classList.add('list-active');
@@ -604,6 +631,10 @@
             list_view.classList.remove('list-active');
             break;
         }
+      });
+
+      list_view.addEventListener('click', (e) => {
+        console.log(e.target.closest('li'));
       });
 
       // When a click event occurs on a marker in the projects layer, show info
