@@ -96,10 +96,10 @@
     transform: translateX(200%);
   }
 
-  .content {
+  .sidebar .content {
     overflow-y: auto;
     max-height: 90vh;
-    border-top: 3px solid #617482;
+    border-top: 4px solid #617482;
     position: relative;
     background: #fff;
     padding: 1em;
@@ -109,7 +109,7 @@
     box-shadow: 1px 1px 3px #00000069;
   }
 
-  .close-btn {
+  .sidebar .close-btn {
     position: absolute;
     color: #888;
     font-size: 1em;
@@ -121,7 +121,7 @@
     background-color: transparent;
   }
 
-  .close-btn:hover {
+  .sidebar .close-btn:hover {
     color: #555;
   }
 
@@ -193,6 +193,24 @@
     background: #fff;
     padding: 1em;
     border-bottom: 1px solid #ccc;
+  }
+
+  .list-content .status {
+    background: #cc0000;
+    padding: 0.3em 0.7em;
+    color: #fff;
+    margin-right: 1em;
+  }
+
+  .list-content .title {
+    display: inline-block;
+    margin-right: 1em;
+  }
+
+  .list-content .address {
+    font-style: italic;
+    margin: 0;
+    display: inline-block;
   }
 
   /* animation / effects */
@@ -306,7 +324,6 @@
             id (str) - the id of the view to retrieve in the event listener
       Return: btn (obj) - button dom element w/ attributes set
       */
-
       const btn = document.createElement('button');
       btn.textContent = view_type;
       btn.setAttribute('data-view', id);
@@ -315,32 +332,31 @@
       return btn;
     }
 
-    function generate_legend(legend_items) {
+    function generate_legend(phases, order) {
       /*
       Creates and populates the dom elements for the map legend / key
-      Args: legend_items (array) - array of objs containing name/color info for each label
+      Args: phases (obj) - obj containing name/color info for each label
+            order (array) -  array of keys = phases showing order to output
       Return: legend ul dom element (obj)
       */
       const legend_list = document.createElement('ul');
 
-      legend_items.forEach((current_item) => {
-        if (!current_item.name) {
-          // create the legend title
-          const title = document.createElement('h4');
-          title.classList.add(current_item.css);
-          title.textContent = current_item.title;
-          legend_list.prepend(title);
-        } else {
-          // create labels and key colors per legend item
-          let item_color = document.createElement('span');
-          item_color.style.backgroundColor = current_item.color;
-          let list_item = document.createElement('li');
-          list_item.textContent = current_item.name;
+      // create the legend title
+      const title = document.createElement('h4');
+      title.classList.add('legend-title');
+      title.textContent = 'Status With City';
+      legend_list.append(title);
 
-          // so the color appears first
-          list_item.prepend(item_color);
-          legend_list.append(list_item);
-        }
+      order.forEach((current_item) => {
+        // create labels and key colors per legend item
+        let item_color = document.createElement('span');
+        item_color.style.backgroundColor = phases[current_item];
+        let list_item = document.createElement('li');
+        list_item.textContent = current_item;
+
+        // so the color appears first
+        list_item.prepend(item_color);
+        legend_list.append(list_item);
       });
 
       return legend_list
@@ -422,11 +438,12 @@
         </ul>`
     }
 
-    function generate_list_view(map_features) {
+    function generate_list_view(map_features, phases) {
       /*
       Generates the ul dom element containing the list view of the projects on the
       map based on the map feature array passed in.
       Args: map_features (arr) - array of layer map geojson features from a mapbox layer
+            phases (obj) - obj containing color data for each phase
       Return: list (obj) - ul dom element of the list view items
       */
       const list = document.createElement('ul');
@@ -434,9 +451,22 @@
 
       map_features.forEach((current_item) => {
         let current_feature = document.createElement('li');
-        current_feature.setAttribute('data-name', current_item.properties["Project Name"])
-        // need to add a click handler event
-        current_feature.textContent = current_item.properties["Project Name"];
+        current_feature.setAttribute('data-name', current_item.properties["Project Name"]);
+
+        let status_tag = document.createElement('span');
+        status_tag.textContent = current_item.properties["Phase"];
+        status_tag.classList.add('status');
+        status_tag.style.backgroundColor = phases[current_item.properties['Phase']];
+
+        let title = document.createElement('h3');
+        title.textContent = current_item.properties["Project Name"];
+        title.classList.add('title');
+
+        let address = document.createElement('p');
+        address.textContent = current_item.properties["Address"];
+        address.classList.add('address');
+        current_feature.append(status_tag, title, address);
+
         list.append(current_feature)
       });
 
@@ -525,23 +555,20 @@
     }
     const data = {
       features: [],
-      // colors and labels to use for the legend
-      legend: [{
-          title: 'Status With City',
-          css: 'legend-title'
-        }, {
-          name: 'Application',
-          color: '#555'
-        }, {
-          name: 'In Design',
-          color: '#86619f'
-        }, {
-          name: 'Under Review',
-          color: '#268adb'
-        }, {
-          name: 'Approved',
-          color: '#358c29'
-      }],
+      // phase names and their associated colors
+      phases: {
+        'Application': '#555',
+        'In Design': '#86619f',
+        'In Review': '#268adb',
+        'Approved': '#358c29'
+      },
+      // the order to output the legend items in
+      legend_order: [
+        'Application',
+        'In Design',
+        'In Review',
+        'Approved'
+      ],
       view_types: [{
           name: 'List View',
           id: 'list'
@@ -554,6 +581,7 @@
     // dom elements references
     const map_element = document.querySelector('#map');
     const sidebar = document.querySelector('.sidebar');
+    const sidebar_content = document.querySelector('.sidebar .content');
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
     const legend = document.querySelector('.legend');
@@ -586,9 +614,8 @@
       });
       view_menu.append(view_contents);
 
-
       // create the legend element
-      const legend_elements = generate_legend(data.legend);
+      const legend_elements = generate_legend(data.phases, data.legend_order);
       legend.append(legend_elements);
 
       // store a popup reference to reassign/close/reopen in multiple events
@@ -603,6 +630,7 @@
       // Add zoom and rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
 
+      // create the list view
       map.on('idle', () => {
         // only need to get the features once
         if(!state.markers_saved) {
@@ -612,7 +640,7 @@
           data.features = getUniqueFeatures(rendered_features, "Project Name");
           console.log(data.features);
 
-          const projects_list = generate_list_view(data.features);
+          const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
           state.markers_saved = true;
         }
@@ -640,6 +668,8 @@
       });
 
       list_view.addEventListener('click', (e) => {
+
+        // TODO
         console.log(e.target.closest('li'));
       });
 
@@ -660,6 +690,8 @@
         // makes the template element active so its visible in the dom
         const active_template = info_template.content.cloneNode(true);
         sidebar_info.append(active_template);
+        // match border color with legend/icon colors for phases
+        sidebar_content.style.borderColor = data.phases[current_project.properties['Phase']];
 
         popup = make_name_popup(current_project).addTo(map);
       });
