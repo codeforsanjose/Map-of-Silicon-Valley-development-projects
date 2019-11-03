@@ -45,6 +45,46 @@
     margin: 0;
   }
 
+  /* loading screen */
+
+  .loader {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    flex-direction: column;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+
+  .loader.hidden {
+    display: none;
+  }
+
+  .lds-dual-ring {
+    display: inline-block;
+    width: 64px;
+    height: 64px;
+  }
+
+  .lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 51px;
+    height: 51px;
+    margin: 1px;
+    border-radius: 50%;
+    border: 5px solid #48647c;
+    border-color: #48647c transparent #48647c transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+
   /* Map View/List View picker menu */
 
   .view-menu {
@@ -241,8 +281,55 @@
   }
 
   .fade-out {
-    animation: fadeOut ease 0.1s;
-    -webkit-animation: fadeOut ease 0.1s;
+    animation: fadeOut ease 0.2s;
+    -webkit-animation: fadeOut ease 0.2s;
+  }
+
+  .fade-out-slow {
+    animation: fadeOut ease 0.5s;
+    -webkit-animation: fadeOut ease 0.5s;
+  }
+
+  .fade-in-out {
+    animation: fadeInOut ease 2s infinite;
+    -webkit-animation: fadeInOut ease 2s infinite;
+  }
+
+  .slide-out-top {
+    animation: slideOutTop ease 2s infinite;
+    -webkit-animation: slideOutTop ease 2s infinite;
+  }
+
+  .slide-out-bottom {
+    animation: slideOutBottom ease 2s infinite;
+    -webkit-animation: slideOutBottom ease 2s infinite;
+  }
+
+  @keyframes slideOutTop{
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-100vh);
+    }
+  }
+
+  @keyframes slideOutBottom{
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(100vh);
+    }
+  }
+
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   @keyframes fadeIn{
@@ -280,6 +367,30 @@
       opacity:0;
     }
   }
+
+  @keyframes fadeInOut{
+    0% {
+      opacity:1;
+    }
+    50% {
+      opacity: 0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+
+  @-webkit-keyframes fadeInOut {
+    0% {
+      opacity:1;
+    }
+    50% {
+      opacity: 0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
   </style>
 
   <meta name="theme-color" content="#fafafa">
@@ -291,6 +402,12 @@
   <![endif]-->
 
   <!-- Add your site or application content here -->
+  <section class="loader">
+    <div class="lds-dual-ring"></div>
+    <p class="fade-in-out">
+      Loading
+    </p>
+  </section>
   <main id="map"></main>
   <nav class="view-menu"></nav>
   <aside class="sidebar hidden">
@@ -602,6 +719,9 @@
     const legend = document.querySelector('.legend');
     const list_view = document.querySelector('.list-view');
     const view_menu = document.querySelector('.view-menu');
+    const loader = document.querySelector('.loader');
+    const loader_text = document.querySelector('.loader p');
+    const loader_spinner = document.querySelector('.loader .lds-dual-ring');
 
     // generate the map
     mapboxgl.accessToken = CONSTANTS.mapbox_key;
@@ -614,6 +734,20 @@
 
     // wait for map to finish load before executing map functions
     map.on('load', () => {
+
+      // ============ PRELOADER =============
+
+      // animate hiding loader on map load
+      loader.classList.add(CONSTANTS.css.fade_out);
+
+      // named animationend callback so listener can be deleted to prevent memory leaks
+      const hide_loader = (e) => {
+        loader.removeEventListener('animationend', hide_loader);
+        loader.classList.add(CONSTANTS.css.hidden);
+      };
+
+      // hide loader after css animation completes
+      loader.addEventListener('animationend', hide_loader);
 
       // ========= MAP UI CREATION ============
 
