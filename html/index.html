@@ -254,6 +254,10 @@
     cursor: pointer;
   }
 
+  .list-content .active {
+    background: #b4dee4;
+  }
+
   .list-content li:hover {
     background: #ddd;
   }
@@ -662,6 +666,28 @@
       }
     }
 
+    function show_sidebar(feature) {
+
+      // clear existing content by looping through sidebar info children
+      while (sidebar_info.firstChild) {
+          sidebar_info.firstChild.remove();
+      }
+
+      // animate sidebar changes according to if the sidebar is already open
+      play_sidebar_animation(state.sidebar_open);
+
+      // to hold the sidebar elements before append
+      const info_template = document.createElement('template');
+      info_template.innerHTML = generate_sidebar(feature.properties);
+      // makes the template element active so its visible in the dom
+      const active_template = info_template.content.cloneNode(true);
+      sidebar_info.append(active_template);
+      // match border color with legend/icon colors for phases
+      sidebar_content.style.borderColor = data.phases[feature.properties['Phase']];
+
+      // popup = make_name_popup(feature).addTo(map);
+    }
+
     function animate_popup_removal(popup) {
       /*
       Animates the removal of the popup by waiting for the animation to complete
@@ -685,7 +711,9 @@
 
     const state = {
       sidebar_open: false,
-      markers_saved: false
+      markers_saved: false,
+      active_tab: null,
+      active_project: null
     }
     const CONSTANTS = {
       mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
@@ -698,7 +726,8 @@
         fade_out_slow: 'fade-out-slow',
         slide_top: 'slide-out-top',
         slide_bottom: 'slide-out-bottom',
-        darken: 'darken'
+        darken: 'darken',
+        active: 'active'
       },
       projects_layer: 'projects-catalyze-sv'
     }
@@ -821,9 +850,9 @@
 
         // inactive style every button before styling the active one
         [...view_menu.children].forEach((current) => {
-          current.classList.remove('active');
+          current.classList.remove(CONSTANTS.css.active);
         });
-        e.target.classList.add('active');
+        e.target.classList.add(CONSTANTS.css.active);
 
         switch (view_type) {
           case 'list':
@@ -838,24 +867,22 @@
       });
 
       list_view.addEventListener('click', (e) => {
-        const current_project_id = e.target.closest('li').getAttribute('data-index');
+        const current_listing = e.target.closest('li');
+        const current_project_id = current_listing.getAttribute('data-index');
         const current_project = data.features[current_project_id];
 
-        // clear existing content by looping through sidebar info children
-        while (sidebar_info.firstChild) {
-            sidebar_info.firstChild.remove();
+        if (state.active_tab) {
+          state.active_tab.classList.remove(CONSTANTS.css.active)
+          current_listing.classList.add(CONSTANTS.css.active);
+          state.active_tab = current_listing;
+        } else {
+          current_listing.classList.add(CONSTANTS.css.active);
+          state.active_tab = current_listing;
         }
 
-        // animate sidebar changes according to if the sidebar is already open
-        play_sidebar_animation(state.sidebar_open);
-
-        info_template.innerHTML = generate_sidebar(current_project.properties);
-        // makes the template element active so its visible in the dom
-        const active_template = info_template.content.cloneNode(true);
-        sidebar_info.append(active_template);
-        // match border color with legend/icon colors for phases
-        sidebar_content.style.borderColor = data.phases[current_project.properties['Phase']];
-
+        show_sidebar(current_project);
+        // have to remove popup cuz it can have multiple of these showing
+        popup.remove();
         popup = make_name_popup(current_project).addTo(map);
       });
 
@@ -863,32 +890,32 @@
       map.on('click', CONSTANTS.projects_layer, (e) => {
 
         const current_project = e.features[0];
+        const current_listing = document.querySelector(`.list-view li[data-name="${current_project.properties['Project Name']}"]`);
 
-        // clear existing content by looping through sidebar info children
-        while (sidebar_info.firstChild) {
-            sidebar_info.firstChild.remove();
+        if (state.active_tab) {
+          state.active_tab.classList.remove(CONSTANTS.css.active)
+          current_listing.classList.add(CONSTANTS.css.active);
+          state.active_tab = current_listing;
+        } else {
+          current_listing.classList.add(CONSTANTS.css.active);
+          state.active_tab = current_listing;
         }
 
-        // animate sidebar changes according to if the sidebar is already open
-        play_sidebar_animation(state.sidebar_open);
-
-        info_template.innerHTML = generate_sidebar(current_project.properties);
-        // makes the template element active so its visible in the dom
-        const active_template = info_template.content.cloneNode(true);
-        sidebar_info.append(active_template);
-        // match border color with legend/icon colors for phases
-        sidebar_content.style.borderColor = data.phases[current_project.properties['Phase']];
-
+        show_sidebar(current_project);
         popup = make_name_popup(current_project).addTo(map);
       });
 
       close_btn.addEventListener('click', () => {
+
         // hide the sidebar on click
         state.sidebar_open = false;
         sidebar.classList.toggle(CONSTANTS.css.hidden);
         // deemphasize the legend
         legend.classList.toggle(CONSTANTS.css.transparent);
         map_element.classList.toggle('darken');
+        // clear active
+        state.active_tab.classList.remove(CONSTANTS.css.active)
+        state.active_tab = null;
 
         // remove current popup element after animation ends
         animate_popup_removal(popup.getElement());
