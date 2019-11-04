@@ -166,7 +166,7 @@
     pointer-events: auto;
     opacity: 1;
     word-wrap: break-word;
-    box-shadow: 1px 1px 3px #00000069;
+    box-shadow: 0px 1px 3px #00000069;
   }
 
   .sidebar .close-btn {
@@ -236,7 +236,7 @@
   .list-header {
   }
 
-  .list-view.list-active {
+  .list-view.active {
     background: #fff;
     transform: translateX(0);
   }
@@ -435,7 +435,7 @@
   </aside>
   <aside class="legend">
   </aside>
-  <section class="list-view">
+  <section id="list" class="list-view">
     <div class="list-header"></div>
   </section>
 
@@ -471,7 +471,7 @@
       */
       const btn = document.createElement('button');
       btn.textContent = view_type;
-      btn.setAttribute('data-view', id);
+      btn.setAttribute('data-view-id', id);
       btn.classList.add('view-btn');
 
       return btn;
@@ -734,7 +734,8 @@
       sidebar_open: false,
       markers_saved: false,
       active_tab: null,
-      active_project: null
+      active_project: null,
+      active_view: null
     }
     const CONSTANTS = {
       mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
@@ -748,9 +749,12 @@
         slide_top: 'slide-out-top',
         slide_bottom: 'slide-out-bottom',
         darken: 'darken',
-        active: 'active'
+        active: 'active',
+        list: 'list',
+        list_active: 'list-active'
       },
-      projects_layer: 'projects-catalyze-sv'
+      projects_layer: 'projects-catalyze-sv',
+      projects_id_key: 'Project Name'
     }
     const data = {
       features: [],
@@ -805,9 +809,9 @@
       // ============ PRELOADER =============
 
       // animate hiding loader on map load
-      loader.classList.add('fade-out-slow');
-      loader_title.classList.add('slide-out-top');
-      loader_text.classList.add('slide-out-bottom');
+      loader.classList.add(CONSTANTS.css.fade_out_slow);
+      loader_title.classList.add(CONSTANTS.css.slide_top);
+      loader_text.classList.add(CONSTANTS.css.slide_bottom);
 
       // named animationend callback so listener can be deleted to prevent memory leaks
       const hide_loader = (e) => {
@@ -822,11 +826,13 @@
 
       // create the view type menu
       const view_contents = document.createDocumentFragment();
-      data.view_types.forEach((current_item) => {
+      data.view_types.forEach((current_item, i) => {
         let view_btn = generate_view_menu_item(current_item.name, current_item.id);
         // have map view button shown as active by default
-        if (current_item.name === 'Map View') {
-          view_btn.classList.add('active');
+        if (i === 1) {
+          view_btn.classList.add(CONSTANTS.css.active);
+          state.active_tab = view_btn;
+          state.active_view = map_element;
         }
         view_contents.append(view_btn);
       });
@@ -842,9 +848,6 @@
         className: CONSTANTS.css.fade
       });
 
-      // to hold the sidebar elements before append
-      // const info_template = document.createElement('template');
-
       // Add zoom and rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
 
@@ -855,7 +858,7 @@
           // grab the features on the projects layer
           const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.projects_layer]});
           // filter any duplicates out by name and save the features for later use
-          data.features = getUniqueFeatures(rendered_features, "Project Name");
+          data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
@@ -867,24 +870,21 @@
 
       // catch the target through event bubbling
       view_menu.addEventListener('click', (e) => {
-        const view_type = e.target.getAttribute('data-view');
+        const view_type = e.target.getAttribute('data-view-id');
 
-        // inactive style every button before styling the active one
-        [...view_menu.children].forEach((current) => {
-          current.classList.remove(CONSTANTS.css.active);
-        });
+        // unhighlight current active tab then highlight clicked tab
+        state.active_tab.classList.remove(CONSTANTS.css.active);
         e.target.classList.add(CONSTANTS.css.active);
+        state.active_tab = e.target;
 
-        switch (view_type) {
-          case 'list':
-            list_view.classList.add('list-active');
-            view_menu.classList.add('list');
-            break;
-          case 'map':
-            list_view.classList.remove('list-active');
-            view_menu.classList.remove('list');
-            break;
-        }
+        // switch view menu styles specific for the active view
+        view_menu.classList.remove(state.active_view.id);
+        view_menu.classList.add(view_type);
+
+        // add active class to corresponding view
+        state.active_view.classList.remove(CONSTANTS.css.active);
+        state.active_view = document.getElementById(view_type);
+        state.active_view.classList.add(CONSTANTS.css.active)
       });
 
       list_view.addEventListener('click', (e) => {
