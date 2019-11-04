@@ -667,7 +667,11 @@
     }
 
     function show_sidebar(feature) {
-
+      /*
+      Show's the sidebar and the info in it for the currently selected feature/marker.
+      Args: feature (obj) - the feature obj for the project to display info for w/ a properties obj
+      Return: na
+      */
       // clear existing content by looping through sidebar info children
       while (sidebar_info.firstChild) {
           sidebar_info.firstChild.remove();
@@ -676,7 +680,7 @@
       // animate sidebar changes according to if the sidebar is already open
       play_sidebar_animation(state.sidebar_open);
 
-      // to hold the sidebar elements before append
+      // sidebar elements container that can be innerHTML'ed
       const info_template = document.createElement('template');
       info_template.innerHTML = generate_sidebar(feature.properties);
       // makes the template element active so its visible in the dom
@@ -684,8 +688,6 @@
       sidebar_info.append(active_template);
       // match border color with legend/icon colors for phases
       sidebar_content.style.borderColor = data.phases[feature.properties['Phase']];
-
-      // popup = make_name_popup(feature).addTo(map);
     }
 
     function animate_popup_removal(popup) {
@@ -705,6 +707,25 @@
 
       // only remove popup after css animation completes
       popup.addEventListener('animationend', remove_popup);
+    }
+
+    function highlight_active_project(state, current_listing) {
+      /*
+      Highlights the currently selected project/marker in the list view.
+      Args: state (obj) - the state obj containing state.active_project whether it's
+              null or the feature obj that is currently active
+            current_listing (obj) - the dom element in the list view corresponding
+              to the feature to be made active
+      Return: na
+      */
+      // if something's already highlighted, need to remove the highlight first
+      if (state.active_project) {
+        state.active_project.classList.remove(CONSTANTS.css.active)
+        current_listing.classList.add(CONSTANTS.css.active);
+      } else {
+        current_listing.classList.add(CONSTANTS.css.active);
+      }
+      state.active_project = current_listing;
     }
 
     // =============== APP LOGIC ===============
@@ -822,7 +843,7 @@
       });
 
       // to hold the sidebar elements before append
-      const info_template = document.createElement('template');
+      // const info_template = document.createElement('template');
 
       // Add zoom and rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
@@ -871,17 +892,10 @@
         const current_project_id = current_listing.getAttribute('data-index');
         const current_project = data.features[current_project_id];
 
-        if (state.active_tab) {
-          state.active_tab.classList.remove(CONSTANTS.css.active)
-          current_listing.classList.add(CONSTANTS.css.active);
-          state.active_tab = current_listing;
-        } else {
-          current_listing.classList.add(CONSTANTS.css.active);
-          state.active_tab = current_listing;
-        }
+        highlight_active_project(state, current_listing);
 
         show_sidebar(current_project);
-        // have to remove popup cuz it can have multiple of these showing
+        // must remove existing popup cuz multiple of these can be showing
         popup.remove();
         popup = make_name_popup(current_project).addTo(map);
       });
@@ -890,16 +904,10 @@
       map.on('click', CONSTANTS.projects_layer, (e) => {
 
         const current_project = e.features[0];
-        const current_listing = document.querySelector(`.list-view li[data-name="${current_project.properties['Project Name']}"]`);
+        const current_project_name = current_project.properties['Project Name'];
+        const current_listing = document.querySelector(`.list-view li[data-name="${current_project_name}"]`);
 
-        if (state.active_tab) {
-          state.active_tab.classList.remove(CONSTANTS.css.active)
-          current_listing.classList.add(CONSTANTS.css.active);
-          state.active_tab = current_listing;
-        } else {
-          current_listing.classList.add(CONSTANTS.css.active);
-          state.active_tab = current_listing;
-        }
+        highlight_active_project(state, current_listing);
 
         show_sidebar(current_project);
         popup = make_name_popup(current_project).addTo(map);
@@ -914,8 +922,8 @@
         legend.classList.toggle(CONSTANTS.css.transparent);
         map_element.classList.toggle('darken');
         // clear active
-        state.active_tab.classList.remove(CONSTANTS.css.active)
-        state.active_tab = null;
+        state.active_project.classList.remove(CONSTANTS.css.active)
+        state.active_project = null;
 
         // remove current popup element after animation ends
         animate_popup_removal(popup.getElement());
