@@ -61,16 +61,27 @@
     flex-direction: column;
     text-transform: uppercase;
     letter-spacing: 0.2em;
+    will-change: opacity;
   }
 
   .loader.hidden {
     display: none;
   }
 
+  .loader-title {
+    will-change: transform;
+    font-weight: 400;
+  }
+
+  .loader-title strong {
+    color: #F0B50C;
+  }
+
   .lds-dual-ring {
     display: inline-block;
     width: 64px;
     height: 64px;
+    will-change: transform;
   }
 
   .lds-dual-ring:after {
@@ -101,6 +112,7 @@
 
   .view-menu.list {
     background-color: #000;
+    pointer-events: auto;
   }
 
   .view-btn {
@@ -133,7 +145,7 @@
     position: absolute;
     right: 1em;
     top: 1em;
-    width: 40%;
+    width: 50%;
     min-width: 12em;
     transform: translateX(0);
     transition: transform 0.25s ease-in-out;
@@ -286,8 +298,8 @@
   }
 
   .fade-out-slow {
-    animation: fadeOut ease 0.5s;
-    -webkit-animation: fadeOut ease 0.5s;
+    animation: fadeOut ease 1s;
+    -webkit-animation: fadeOut ease 1s;
   }
 
   .fade-in-out {
@@ -296,13 +308,13 @@
   }
 
   .slide-out-top {
-    animation: slideOutTop ease 2s infinite;
-    -webkit-animation: slideOutTop ease 2s infinite;
+    animation: slideOutTop ease 1s;
+    -webkit-animation: slideOutTop ease 1s;
   }
 
   .slide-out-bottom {
-    animation: slideOutBottom ease 2s infinite;
-    -webkit-animation: slideOutBottom ease 2s infinite;
+    animation: slideOutBottom ease 1s;
+    -webkit-animation: slideOutBottom ease 1s;
   }
 
   @keyframes slideOutTop{
@@ -403,6 +415,7 @@
 
   <!-- Add your site or application content here -->
   <section class="loader">
+    <h3 class="loader-title">Catalyze <strong>SV</strong></h3>
     <div class="lds-dual-ring"></div>
     <p class="fade-in-out">
       Loading
@@ -645,7 +658,7 @@
         state.sidebar_open = true;
         sidebar.classList.toggle(CONSTANTS.css.hidden);
         legend.classList.toggle(CONSTANTS.css.transparent);
-        map_element.classList.toggle('darken');
+        map_element.classList.toggle(CONSTANTS.css.darken);
       }
     }
 
@@ -681,7 +694,11 @@
         hidden: 'hidden',
         transparent: 'transparent',
         fade: 'fade-in',
-        fade_out: 'fade-out'
+        fade_out: 'fade-out',
+        fade_out_slow: 'fade-out-slow',
+        slide_top: 'slide-out-top',
+        slide_bottom: 'slide-out-bottom',
+        darken: 'darken'
       },
       projects_layer: 'projects-catalyze-sv'
     }
@@ -721,7 +738,7 @@
     const view_menu = document.querySelector('.view-menu');
     const loader = document.querySelector('.loader');
     const loader_text = document.querySelector('.loader p');
-    const loader_spinner = document.querySelector('.loader .lds-dual-ring');
+    const loader_title = document.querySelector('.loader .loader-title');
 
     // generate the map
     mapboxgl.accessToken = CONSTANTS.mapbox_key;
@@ -738,7 +755,9 @@
       // ============ PRELOADER =============
 
       // animate hiding loader on map load
-      loader.classList.add(CONSTANTS.css.fade_out);
+      loader.classList.add('fade-out-slow');
+      loader_title.classList.add('slide-out-top');
+      loader_text.classList.add('slide-out-bottom');
 
       // named animationend callback so listener can be deleted to prevent memory leaks
       const hide_loader = (e) => {
@@ -787,7 +806,6 @@
           const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.projects_layer]});
           // filter any duplicates out by name and save the features for later use
           data.features = getUniqueFeatures(rendered_features, "Project Name");
-          console.log(data.features);
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
@@ -821,11 +839,24 @@
 
       list_view.addEventListener('click', (e) => {
         const current_project_id = e.target.closest('li').getAttribute('data-index');
+        const current_project = data.features[current_project_id];
 
-        console.log(data.features[current_project_id]);
+        // clear existing content by looping through sidebar info children
+        while (sidebar_info.firstChild) {
+            sidebar_info.firstChild.remove();
+        }
 
-        // TODO
-        console.log(e.target.closest('li'));
+        // animate sidebar changes according to if the sidebar is already open
+        play_sidebar_animation(state.sidebar_open);
+
+        info_template.innerHTML = generate_sidebar(current_project.properties);
+        // makes the template element active so its visible in the dom
+        const active_template = info_template.content.cloneNode(true);
+        sidebar_info.append(active_template);
+        // match border color with legend/icon colors for phases
+        sidebar_content.style.borderColor = data.phases[current_project.properties['Phase']];
+
+        popup = make_name_popup(current_project).addTo(map);
       });
 
       // When a click event occurs on a marker in the projects layer, show info
