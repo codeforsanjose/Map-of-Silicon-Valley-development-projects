@@ -27,6 +27,10 @@
     box-sizing: border-box;
   }
 
+  a {
+    color: #27718e;
+  }
+
   body {
     overflow: hidden;
     font-family: 'Lato',Arial,Helvetica Neue,Helvetica,sans-serif;
@@ -43,6 +47,48 @@
 
   .no-margin {
     margin: 0;
+  }
+
+  /* Tooltips */
+
+  [tooltip]::before {
+    content: "";
+    position: absolute;
+    left:50%;
+    top: 100%;
+    /* margin-top: 8px; */
+    transform: translateX(-50%) translatey(-100%) rotate(-180deg);
+    border-width: 4px 6px 0 6px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+    opacity: 0;
+  }
+  [tooltip]::after {
+    content: attr(tooltip);
+    position: absolute;
+    left: -15%;
+    top: 100%;
+    /* margin-top: 8px; */
+    transform: translateX(-50%) translateY(0%);
+    background: rgba(0, 0, 0, 0.7);
+    text-align: center;
+    color: #fff;
+    padding: 4px;
+    font-size: 1em;
+    min-width: 170px;
+    border-radius: 5px;
+    pointer-events: none;
+    opacity:0;
+  }
+
+  [tooltip]:hover::after,
+  [tooltip]:hover::before {
+     opacity:1
+  }
+
+  [tooltip]:active::after,
+  [tooltip]:active::before {
+     opacity:1
   }
 
   /* loading screen */
@@ -169,9 +215,62 @@
     box-shadow: 0px 1px 3px #00000069;
   }
 
+  .sidebar .title {
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .sidebar .status {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 1.1em;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .sidebar .status-tag {
+    background: #000;
+    padding: 0.3em 0.7em;
+    color: #fff;
+    margin-right: 0.5em;
+    display: inline-block;
+  }
+
+  .sidebar .status-detail {
+    margin-right: 0.5em;
+    max-width: 60%;
+  }
+
+  .sidebar .status-explain {
+    font-size: 0.8em;
+    font-style: italic;
+    position: relative;
+  }
+
+  .sidebar .address {
+    font-style: italic;
+  }
+
+  .sidebar .action-btn {
+    display: inline-block;
+    padding: 0.35em 1.2em;
+    border: 2px solid #1995a6;
+    border-radius: 1px;
+    text-decoration: none;
+    margin: 0 0.4em 0.5em 0;
+    color: #1995a6;
+    text-align: center;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .sidebar .action-btn:hover {
+    color: #fff;
+    background-color: #1995a6;
+  }
+
   .sidebar .close-btn {
     position: absolute;
-    color: #888;
+    color: #777;
     font-size: 1em;
     right: 0;
     padding: 0.5em;
@@ -230,7 +329,7 @@
     width: 100%;
     transform: translateX(-110%);
     will-change: transform;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, filter 0.2s ease;
   }
 
   .list-header {
@@ -254,7 +353,8 @@
     cursor: pointer;
   }
 
-  .list-content .active {
+  .list-content .active,
+  .list-content .active:hover {
     background: #b4dee4;
   }
 
@@ -263,7 +363,7 @@
   }
 
   .list-content .status {
-    background: #cc0000;
+    background: #000;
     padding: 0.3em 0.7em;
     color: #fff;
     margin-right: 1em;
@@ -407,6 +507,30 @@
       opacity:1;
     }
   }
+
+  /* Responsive Styles */
+
+  /* tablet/small screens */
+  @media screen and (max-width: 1200px) {
+
+  }
+  /* mobile */
+  @media screen and (max-width: 768px) {
+    .sidebar {
+      width: 100%;
+      left: 0;
+      right: 0;
+      top: 0;
+    }
+
+    .sidebar .content {
+      max-height: 100vh;
+    }
+
+    .sidebar .close-btn {
+      font-size: 1.1em;
+    }
+  }
   </style>
 
   <meta name="theme-color" content="#fafafa">
@@ -429,7 +553,7 @@
   <nav class="view-menu"></nav>
   <aside class="sidebar hidden">
     <div class="content">
-      <button class="close-btn">X</button>
+      <button class="close-btn">CLOSE [X]</button>
       <div class="info fade-in"></div>
     </div>
   </aside>
@@ -533,54 +657,67 @@
 
       // show/hide some info dependent on if it is available in dataset
       const catalyze_letter_html = catalyze_letter && catalyze_letter !== ''
-          ? `<li><a href=${catalyze_letter} target="_blank" rel="noreferrer">Catalyze SV's Letter</a></li>`
+          ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Catalyze SV's Letter</a>`
           : '';
       const catalyze_scorecard_html = score && score !== ''
-          ? `<li><a href=${score} target="_blank" rel="noreferrer">View Catalyze SV Scorecard</a></li>`
+          ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">View Catalyze SV Scorecard</a>`
           : '';
       const website_html = website && website !== ''
-          ? `<li><a href=${website} target="_blank" rel="noreferrer">View Project Website</a></li>`
+          ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
           : '';
       const presented_date_html = presented_date && presented_date !== ''
           ? `<li>Presented to PAC on: ${presented_date}</li>`
           : '';
       const catalyze_status_html = catalyze_status && catalyze_status !== ''
-          ? `<li>Catalyze SV Review Status: ${catalyze_status}</li>`
+          ? `<p>Catalyze SV Review Status: ${catalyze_status}</p>`
           : '';
       const next_meet_html = next_meet && next_meet !== ''
           ? `<li>Next Public Meeting: ${next_meet}</li>`
           : `<li>Next Public Meeting: TBD</li>`;
       const city_docs_html = city_docs && city_docs !== ''
-          ? `<li><a href=${city_docs} target="_blank" rel="noreferrer">View City Documents</a></li>`
+          ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
+
+      const phase_color = data.phases[Phase];
+      const tooltip = CONSTANTS.status_tip
 
       // template for the sidebar content
       return `
-        <h3>${project_name}</h3>
-        <p>
+        <h3 class="title">${project_name}</h3>
+        <p class="status">
+          <span>
+            <span class="status-tag" style="background:${phase_color}">${Phase}</span>
+          </span>
+          <span class="status-detail">${detail_status}</span>
+          <span>
+            <a href="#" class="status-explain" tooltip="${tooltip}">What's This?</a>
+          </span>
+        </p>
+        <p class="address">
           ${Address}, ${City}, ${State} ${Zip}
         </p>
         <p>
           ${project_type}
         </p>
         <ul>
-          ${catalyze_status_html}
-          ${catalyze_scorecard_html}
-          ${catalyze_letter_html}
           <li>
             Owner/Developer: ${developer}
           </li>
-          <li>
-            Status With City: ${Phase}
-          </li>
-          <li>
-            Status Details: ${detail_status}
-          </li>
           ${presented_date_html}
           ${next_meet_html}
+        </ul>
+        <hr />
+        <h4>Resources & Links</h4>
+        <p>
+          Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
+        </p>
+        ${catalyze_status_html}
+        <p>
+          ${catalyze_scorecard_html}
+          ${catalyze_letter_html}
           ${city_docs_html}
           ${website_html}
-        </ul>`
+        </p>`
     }
 
     function generate_list_view(map_features, phases) {
@@ -662,7 +799,7 @@
         state.sidebar_open = true;
         sidebar.classList.toggle(CONSTANTS.css.hidden);
         legend.classList.toggle(CONSTANTS.css.transparent);
-        map_element.classList.toggle(CONSTANTS.css.darken);
+        state.active_view.classList.toggle(CONSTANTS.css.darken);
       }
     }
 
@@ -750,11 +887,11 @@
         slide_bottom: 'slide-out-bottom',
         darken: 'darken',
         active: 'active',
-        list: 'list',
-        list_active: 'list-active'
+        list: 'list'
       },
       projects_layer: 'projects-catalyze-sv',
-      projects_id_key: 'Project Name'
+      projects_id_key: 'Project Name',
+      status_tip: 'Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)'
     }
     const data = {
       features: [],
@@ -874,17 +1011,21 @@
 
         // unhighlight current active tab then highlight clicked tab
         state.active_tab.classList.remove(CONSTANTS.css.active);
-        e.target.classList.add(CONSTANTS.css.active);
         state.active_tab = e.target;
+        state.active_tab.classList.add(CONSTANTS.css.active);
 
-        // switch view menu styles specific for the active view
+        // switch view menu styles specific to the active view
         view_menu.classList.remove(state.active_view.id);
         view_menu.classList.add(view_type);
 
-        // add active class to corresponding view
-        state.active_view.classList.remove(CONSTANTS.css.active);
+        // hide previous active view and show current active view
+        state.active_view.classList.remove(CONSTANTS.css.active, CONSTANTS.css.darken);
         state.active_view = document.getElementById(view_type);
         state.active_view.classList.add(CONSTANTS.css.active)
+        // if sidebar is open we need to apply darkening to current view
+        if (state.sidebar_open) {
+          state.active_view.classList.add(CONSTANTS.css.darken);
+        }
       });
 
       list_view.addEventListener('click', (e) => {
@@ -904,7 +1045,7 @@
       map.on('click', CONSTANTS.projects_layer, (e) => {
 
         const current_project = e.features[0];
-        const current_project_name = current_project.properties['Project Name'];
+        const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
         const current_listing = document.querySelector(`.list-view li[data-name="${current_project_name}"]`);
 
         highlight_active_project(state, current_listing);
@@ -918,9 +1059,9 @@
         // hide the sidebar on click
         state.sidebar_open = false;
         sidebar.classList.toggle(CONSTANTS.css.hidden);
-        // deemphasize the legend
+        // remove deemphasizing styles
         legend.classList.toggle(CONSTANTS.css.transparent);
-        map_element.classList.toggle('darken');
+        state.active_view.classList.remove(CONSTANTS.css.darken);
         // clear active
         state.active_project.classList.remove(CONSTANTS.css.active)
         state.active_project = null;
