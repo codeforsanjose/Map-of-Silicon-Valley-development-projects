@@ -799,6 +799,8 @@
         address.classList.add('address');
         current_feature.append(status_tag, title, address);
 
+        state.listings[current_props['Project Name']] = current_feature;
+
         list.append(current_feature)
       });
 
@@ -871,21 +873,18 @@
       sidebar_info.append(active_template);
       // match border color with legend/icon colors for phases
       sidebar_content.style.borderColor = data.phases[feature.properties['Phase']];
-      const locate_btn = document.querySelector('.locate');
     }
 
-    function show_view(view_type, tab_element = undefined) {
+    function show_view(view_type) {
       /*
+      Switches the current view to the specified view and marks the corresponding
+      tab as active.
+      Args: view_type (str) - which view to show using the ids in the view types array
+      Return: na
       */
-      let tab;
-      if (tab_element) {
-        tab = tab_element
-      } else {
-        tab = document.querySelector(`.view-btn[data-view-id=${view_type}]`);
-      }
       // unhighlight current active tab then highlight clicked tab
       state.active_tab.classList.remove(CONSTANTS.css.active);
-      state.active_tab = tab;
+      state.active_tab = state.tabs[view_type];
       state.active_tab.classList.add(CONSTANTS.css.active);
 
       // switch view menu styles specific to the active view
@@ -946,6 +945,8 @@
     const state = {
       sidebar_open: false,
       markers_saved: false,
+      tabs: {},
+      listings: {},
       active_tab: null,
       active_project: null,
       active_view: null
@@ -1058,6 +1059,8 @@
           state.active_view = map_element;
         }
         view_contents.append(view_btn);
+        // save tabs for later switching use without requerying dom
+        state.tabs[current_item.id] = view_btn;
       });
       view_menu.append(view_contents);
 
@@ -1083,9 +1086,6 @@
           // filter any duplicates out by name and save the features for later use
           data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
 
-          // // extend it with each marker
-          // console.log(new mapboxgl.LngLatBounds());
-
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
           state.markers_saved = true;
@@ -1098,23 +1098,7 @@
       view_menu.addEventListener('click', (e) => {
         const view_type = e.target.getAttribute('data-view-id');
 
-        // unhighlight current active tab then highlight clicked tab
-        state.active_tab.classList.remove(CONSTANTS.css.active);
-        state.active_tab = e.target;
-        state.active_tab.classList.add(CONSTANTS.css.active);
-
-        // switch view menu styles specific to the active view
-        view_menu.classList.remove(state.active_view.id);
-        view_menu.classList.add(view_type);
-
-        // hide previous active view and show current active view
-        state.active_view.classList.remove(CONSTANTS.css.active, CONSTANTS.css.darken);
-        state.active_view = document.getElementById(view_type);
-        state.active_view.classList.add(CONSTANTS.css.active)
-        // if sidebar is open we need to apply darkening to current view
-        if (state.sidebar_open) {
-          state.active_view.classList.add(CONSTANTS.css.darken);
-        }
+        show_view(view_type);
       });
 
       list_view.addEventListener('click', (e) => {
@@ -1135,7 +1119,7 @@
 
         const current_project = e.features[0];
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
-        const current_listing = document.querySelector(`.list-view li[data-name="${current_project_name}"]`);
+        const current_listing = state.listings[current_project_name];
 
         highlight_active_project(state, current_listing);
 
