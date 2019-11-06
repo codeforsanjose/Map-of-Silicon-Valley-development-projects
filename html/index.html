@@ -191,7 +191,7 @@
     position: absolute;
     right: 1em;
     top: 1em;
-    width: 50%;
+    width: 45%;
     min-width: 12em;
     transform: translateX(0);
     transition: transform 0.25s ease-in-out;
@@ -248,7 +248,25 @@
   }
 
   .sidebar .address {
+    display: inline-block;
     font-style: italic;
+    margin: 0 0.5em 0 0;
+    margin-right: 0.5em;
+  }
+
+  .sidebar .locate {
+    font-size: 0.9em;
+    background-color: #fff;
+    color: #666;
+    border: 1px solid #ccc;
+    padding: 0.2em 0.5em;
+    margin: 0.2em 0;
+    cursor: pointer;
+  }
+
+  .sidebar .locate:hover {
+    color: #000;
+    border-color: #000;
   }
 
   .sidebar .action-btn {
@@ -258,6 +276,7 @@
     border-radius: 1px;
     text-decoration: none;
     margin: 0 0.4em 0.5em 0;
+    background-color: transparent;
     color: #1995a6;
     text-align: center;
     transition: background-color 0.2s, color 0.2s;
@@ -686,7 +705,7 @@
           ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
           : '';
       const catalyze_scorecard_html = score && score !== ''
-          ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">View Catalyze SV Scorecard</a>`
+          ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">See Catalyze SV Scorecard</a>`
           : '';
       const website_html = website && website !== ''
           ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
@@ -722,6 +741,7 @@
         <p class="address">
           ${Address}, ${City}, ${State} ${Zip}
         </p>
+        <button class="locate">Center on Map</button>
         <p>
           ${project_type}
         </p>
@@ -851,6 +871,36 @@
       sidebar_info.append(active_template);
       // match border color with legend/icon colors for phases
       sidebar_content.style.borderColor = data.phases[feature.properties['Phase']];
+      const locate_btn = document.querySelector('.locate');
+    }
+
+    function show_view(view_type, tab_element = undefined) {
+      /*
+      */
+      let tab;
+      if (tab_element) {
+        tab = tab_element
+      } else {
+        tab = document.querySelector(`.view-btn[data-view-id=${view_type}]`);
+      }
+      // unhighlight current active tab then highlight clicked tab
+      state.active_tab.classList.remove(CONSTANTS.css.active);
+      state.active_tab = tab;
+      state.active_tab.classList.add(CONSTANTS.css.active);
+
+      // switch view menu styles specific to the active view
+      view_menu.classList.remove(state.active_view.id);
+      view_menu.classList.add(view_type);
+
+      // hide previous active view and show current active view
+      state.active_view.classList.remove(CONSTANTS.css.active, CONSTANTS.css.darken);
+      state.active_view = document.getElementById(view_type);
+      state.active_view.classList.add(CONSTANTS.css.active)
+
+      // if sidebar is open we need to apply darkening to current view
+      if (state.sidebar_open) {
+        state.active_view.classList.add(CONSTANTS.css.darken);
+      }
     }
 
     function animate_popup_removal(popup) {
@@ -904,6 +954,7 @@
       mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
       mapbox_style_url: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
       css: {
+        map: 'map',
         hidden: 'hidden',
         transparent: 'transparent',
         fade: 'fade-in',
@@ -913,7 +964,8 @@
         slide_bottom: 'slide-out-bottom',
         darken: 'darken',
         active: 'active',
-        list: 'list'
+        list: 'list',
+        locate_btn: 'locate'
       },
       projects_layer: 'projects-catalyze-sv',
       projects_source_layer: 'Projects_Catalyze_SV',
@@ -1105,6 +1157,22 @@
 
         // remove current popup element after animation ends
         animate_popup_removal(popup.getElement());
+      });
+
+      sidebar_info.addEventListener('click', (e) => {
+        // catch events to the locate button
+        if (e.target.className === CONSTANTS.css.locate_btn) {
+          // get the current project's feature data
+          const current_project_i = state.active_project.getAttribute('data-index');
+          const current_project = data.features[current_project_i];
+          // switch the view to map if on list view
+          if (state.active_view.id === CONSTANTS.css.list) {
+            show_view(CONSTANTS.css.map);
+          }
+          map.flyTo({
+            center: current_project.geometry.coordinates
+          });
+        }
       });
 
       map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
