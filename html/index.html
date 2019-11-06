@@ -921,7 +921,7 @@
       popup.addEventListener('animationend', remove_popup);
     }
 
-    function highlight_active_project(state, current_listing) {
+    function highlight_active_project(active_project, current_listing) {
       /*
       Highlights the currently selected project/marker in the list view.
       Args: state (obj) - the state obj containing state.active_project whether it's
@@ -931,8 +931,8 @@
       Return: na
       */
       // if something's already highlighted, need to remove the highlight first
-      if (state.active_project) {
-        state.active_project.classList.remove(CONSTANTS.css.active)
+      if (active_project) {
+        active_project.classList.remove(CONSTANTS.css.active)
         current_listing.classList.add(CONSTANTS.css.active);
       } else {
         current_listing.classList.add(CONSTANTS.css.active);
@@ -971,7 +971,7 @@
       projects_layer: 'projects-catalyze-sv',
       projects_source_layer: 'Projects_Catalyze_SV',
       projects_id_key: 'Project Name',
-      status_tip: 'Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)'
+      status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)'
     }
     const data = {
       features: [],
@@ -989,6 +989,7 @@
         'In Review',
         'Approved'
       ],
+      // view types in the view menu
       view_types: [{
           name: 'List View',
           id: 'list'
@@ -1074,8 +1075,11 @@
         className: CONSTANTS.css.fade
       });
 
-      // Add zoom and rotation controls to the map.
+      // Add zoom, fullscreen, rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
+      map.addControl(new mapboxgl.FullscreenControl({
+        container: document.querySelector('body')
+      }));
 
       // create the list view
       map.on('idle', () => {
@@ -1106,7 +1110,7 @@
         const current_project_id = current_listing.getAttribute('data-index');
         const current_project = data.features[current_project_id];
 
-        highlight_active_project(state, current_listing);
+        highlight_active_project(state.active_project, current_listing);
 
         show_sidebar(current_project);
         // must remove existing popup cuz multiple of these can be showing
@@ -1121,7 +1125,7 @@
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
         const current_listing = state.listings[current_project_name];
 
-        highlight_active_project(state, current_listing);
+        highlight_active_project(state.active_project, current_listing);
 
         show_sidebar(current_project);
         popup = make_name_popup(current_project).addTo(map);
