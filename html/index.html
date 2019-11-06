@@ -66,7 +66,7 @@
   [tooltip]::after {
     content: attr(tooltip);
     position: absolute;
-    left: -15%;
+    right: -7em;
     top: 100%;
     /* margin-top: 8px; */
     transform: translateX(-50%) translateY(0%);
@@ -586,6 +586,32 @@
       return uniqueFeatures;
     }
 
+    function get_bounds_of_source_layer(source_layer_id, feature_key) {
+      /*
+      Gets a LngLatBounds obj that will encompass all the features in a source
+      layer. Source layers contain all features, even outside of the map viewport.
+      Args: source_layer_id (str) - the id of the source layer to get features from
+            feature_key (str) - the unique key to use in filtering duplicates
+      Return: layer_bounds (obj) - a LngLatBounds obj containing 2 coordinates for (var i = 0; i < the sw and ne corners of bounds that will fit all the featuresngth; i++) {
+        the sw and ne corners of bounds that will fit all the features
+      }
+      */
+      const layer_bounds = new mapboxgl.LngLatBounds();
+      // gets the source info for all features, even outside of current viewport
+      // verify sourcelayer name from: map.getSource('composite').vectorLayerIds
+      const all_features = map.querySourceFeatures('composite', {
+        'sourceLayer': source_layer_id
+      });
+      // filter any duplicates in case of features on tile boundaries
+      const unique_features = getUniqueFeatures(all_features, feature_key);
+
+      unique_features.forEach((current_feature) => {
+        layer_bounds.extend(current_feature.geometry.coordinates);
+      });
+
+      return layer_bounds
+    }
+
     function generate_view_menu_item(view_type, id) {
       /*
       Creates a view menu navigation item to select the view type.
@@ -657,7 +683,7 @@
 
       // show/hide some info dependent on if it is available in dataset
       const catalyze_letter_html = catalyze_letter && catalyze_letter !== ''
-          ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Catalyze SV's Letter</a>`
+          ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
           : '';
       const catalyze_scorecard_html = score && score !== ''
           ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">View Catalyze SV Scorecard</a>`
@@ -890,6 +916,7 @@
         list: 'list'
       },
       projects_layer: 'projects-catalyze-sv',
+      projects_source_layer: 'Projects_Catalyze_SV',
       projects_id_key: 'Project Name',
       status_tip: 'Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)'
     }
@@ -961,6 +988,13 @@
 
       // ========= MAP UI CREATION ============
 
+      // fit map viewport to all plotted projects
+      const projects_bounds = get_bounds_of_source_layer(CONSTANTS.projects_source_layer, CONSTANTS.projects_id_key);
+
+      map.fitBounds(projects_bounds, {
+        padding: 100
+      });
+
       // create the view type menu
       const view_contents = document.createDocumentFragment();
       data.view_types.forEach((current_item, i) => {
@@ -996,6 +1030,9 @@
           const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.projects_layer]});
           // filter any duplicates out by name and save the features for later use
           data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
+
+          // // extend it with each marker
+          // console.log(new mapboxgl.LngLatBounds());
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
