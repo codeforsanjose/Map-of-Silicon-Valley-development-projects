@@ -44,6 +44,8 @@ The intended use case is within an iframe element due to limitations on the Wix 
 
 This requires loading all external libraries and resources from CDNs. You'll notice most of it comes from cdnjs.
 
-This app is built on the Mapbox GL API. Having the documentation available for reference will save your life: [View Mapbox GL API Documentation](https://docs.mapbox.com/mapbox-gl-js/api/)
+Built on the Mapbox GL API. Having the documentation available for reference will save your life: [View Mapbox GL API Documentation](https://docs.mapbox.com/mapbox-gl-js/api/)
 
 The app uses data and styles built with Mapbox's WYSIWIG style editor, and obtusely enterprise-grade web app that allows you to import data, do CRUD operations on data, generate tilesets, and style your map in a highly faceted manner. It does have a bit of a learning curve though, so you should read the documentation for it: [View Mapbox Studio Documentation](https://docs.mapbox.com/studio-manual/overview/)
+
+Scaffolded using [HTML5 Boilerplate for Iframes.](https://github.com/sunnymui/html5-boilerplate-for-iframes)
