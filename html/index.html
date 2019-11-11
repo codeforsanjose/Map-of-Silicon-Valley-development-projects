@@ -1024,6 +1024,12 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
+      const highlight_markers = map.getLayer('projects-catalyze-sv-highlight');
+      console.log(map.getLayoutProperty('projects-catalyze-sv-highlight', 'visibility'));
+      map.setLayoutProperty('projects-catalyze-sv-highlight', 'visibility', 'visible');
+      console.log(map.getLayoutProperty('projects-catalyze-sv-highlight', 'visibility'));
+
+
       // ============ PRELOADER =============
 
       // animate hiding loader on map load
@@ -1161,6 +1167,16 @@
             center: current_project.geometry.coordinates
           });
         }
+      });
+
+      map.on('mouseenter', 'projects-catalyze-sv-highlight', (e) => {
+        console.log(e);
+        map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity-transition', {
+          'duration': 500,
+          'delay': 0
+        });
+        map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', 1);
+
       });
 
       map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
