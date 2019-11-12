@@ -1025,10 +1025,14 @@
     map.on('load', () => {
 
       const highlight_markers = map.getLayer('projects-catalyze-sv-highlight');
-      console.log(map.getLayoutProperty('projects-catalyze-sv-highlight', 'visibility'));
       map.setLayoutProperty('projects-catalyze-sv-highlight', 'visibility', 'visible');
-      console.log(map.getLayoutProperty('projects-catalyze-sv-highlight', 'visibility'));
 
+      const feature_states = ['case',
+        ['boolean', ['feature-state', 'active'], false],
+        1,
+        0
+      ];
+      map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', feature_states);
 
       // ============ PRELOADER =============
 
@@ -1163,19 +1167,33 @@
           if (state.active_view.id === CONSTANTS.css.list) {
             show_view(CONSTANTS.css.map);
           }
-          map.flyTo({
-            center: current_project.geometry.coordinates
-          });
+          map.panTo(current_project.geometry.coordinates);
         }
       });
 
       map.on('mouseenter', 'projects-catalyze-sv-highlight', (e) => {
-        console.log(e);
-        map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity-transition', {
-          'duration': 500,
-          'delay': 0
+        // console.log(e);
+        // map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity-transition', {
+        //   'duration': 500,
+        //   'delay': 0
+        // });
+        // map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', 1);
+        // const highlight_features = map.querySourceFeatures('composite', {
+        //   'sourceLayer': 'Projects_Catalyze_SV'
+        // });
+
+        // console.log(highlight_features);
+        // console.log(map.getSource('composite'));
+        // console.log(map.getLayer('projects-catalyze-sv-highlight'));
+
+        const feature_id = e.features[0].id;
+        map.setFeatureState({
+          source: 'composite',
+          sourceLayer: 'Projects_Catalyze_SV',
+          id: feature_id
+        }, {
+          active: true
         });
-        map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', 1);
 
       });
 
