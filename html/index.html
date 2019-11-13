@@ -949,7 +949,8 @@
       listings: {},
       active_tab: null,
       active_project: null,
-      active_view: null
+      active_view: null,
+      active_marker: null
     }
     const CONSTANTS = {
       mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
@@ -1172,29 +1173,32 @@
       });
 
       map.on('mouseenter', 'projects-catalyze-sv-highlight', (e) => {
-        // console.log(e);
-        // map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity-transition', {
-        //   'duration': 500,
-        //   'delay': 0
-        // });
-        // map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', 1);
-        // const highlight_features = map.querySourceFeatures('composite', {
-        //   'sourceLayer': 'Projects_Catalyze_SV'
-        // });
 
-        // console.log(highlight_features);
-        // console.log(map.getSource('composite'));
-        // console.log(map.getLayer('projects-catalyze-sv-highlight'));
-
-        const feature_id = e.features[0].id;
+        if (!state.active_marker) {
+          state.active_marker = e.features[0].id;
+        }
+        console.log(e.features[0]);
         map.setFeatureState({
           source: 'composite',
-          sourceLayer: 'Projects_Catalyze_SV',
-          id: feature_id
+          sourceLayer: CONSTANTS.projects_source_layer,
+          id: state.active_marker
         }, {
           active: true
         });
 
+      });
+
+      map.on('mouseleave', 'projects-catalyze-sv-highlight', (e) => {
+        // actually we need to store the id in a outer scope state var from mouseenter to be used in the mouseleave function
+        map.setFeatureState({
+          source: 'composite',
+          sourceLayer: CONSTANTS.projects_source_layer,
+          id: state.active_marker
+        }, {
+          active: false
+        });
+
+        state.active_marker = null;
       });
 
       map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
