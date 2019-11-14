@@ -1027,6 +1027,7 @@
 
       const highlight_markers = map.getLayer('projects-catalyze-sv-highlight');
       map.setLayoutProperty('projects-catalyze-sv-highlight', 'visibility', 'visible');
+      // we need to set unique ids on the features
 
       const feature_states = ['case',
         ['boolean', ['feature-state', 'active'], false],
@@ -1034,6 +1035,11 @@
         0
       ];
       map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', feature_states);
+
+      map.addSource("projects", {
+        "type": "geojson",
+        "data": `https://api.mapbox.com/datasets/v1/sunnymui/ck2c85s7500162iqdi2tlqlxu?access_token=${CONSTANTS.mapbox_key}`
+      });
 
       // ============ PRELOADER =============
 
@@ -1172,33 +1178,58 @@
         }
       });
 
+      // create a DOM element for the marker
+      var el = document.createElement('div');
+      el.className = 'marker';
+      el.style.backgroundImage = 'url(https://placekitten.com/g/50/50';
+      el.style.width = 50 + 'px';
+      el.style.height = 50 + 'px';
+      el.style.borderRadius = '999px'
+      state.active_marker = new mapboxgl.Marker(el);
+
+      el.addEventListener('mouseleave', (e) => {
+        state.active_marker.remove();
+      });
+
       map.on('mouseenter', 'projects-catalyze-sv-highlight', (e) => {
 
-        if (!state.active_marker) {
-          state.active_marker = e.features[0].id;
-        }
-        console.log(e.features[0]);
-        map.setFeatureState({
-          source: 'composite',
-          sourceLayer: CONSTANTS.projects_source_layer,
-          id: state.active_marker
-        }, {
-          active: true
-        });
+
+        // el.style.borderRadius = '999px'
+
+        // add marker to map
+        state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
+
+
+
+        // if (!state.active_marker) {
+        //   state.active_marker = e.features[0].id;
+        // }
+        //
+        // map.setFeatureState({
+        //   source: 'composite',
+        //   sourceLayer: CONSTANTS.projects_source_layer,
+        //   // currently issue with mapbox data uploads preventing unique ids
+        //   // https://github.com/mapbox/mapbox-gl-js/issues/8284
+        //   // so hover effects will affect multiple features
+        //   id: state.active_marker
+        // }, {
+        //   active: true
+        // });
 
       });
 
       map.on('mouseleave', 'projects-catalyze-sv-highlight', (e) => {
-        // actually we need to store the id in a outer scope state var from mouseenter to be used in the mouseleave function
-        map.setFeatureState({
-          source: 'composite',
-          sourceLayer: CONSTANTS.projects_source_layer,
-          id: state.active_marker
-        }, {
-          active: false
-        });
 
-        state.active_marker = null;
+        // actually we need to store the id in a outer scope state var from mouseenter to be used in the mouseleave function
+        // map.setFeatureState({
+        //   source: 'composite',
+        //   sourceLayer: CONSTANTS.projects_source_layer,
+        //   id: state.active_marker
+        // }, {
+        //   active: false
+        // });
+        //
+        // state.active_marker = null;
       });
 
       map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
