@@ -9,6 +9,7 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
   <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700&display=swap" rel="stylesheet">
   <!-- Mapbox -->
   <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
@@ -1035,11 +1036,6 @@
         0
       ];
       map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', feature_states);
-
-      map.addSource("projects", {
-        "type": "geojson",
-        "data": `https://api.mapbox.com/datasets/v1/sunnymui/ck2c85s7500162iqdi2tlqlxu?access_token=${CONSTANTS.mapbox_key}`
-      });
 
       // ============ PRELOADER =============
 
