@@ -12,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700&display=swap" rel="stylesheet">
   <!-- Mapbox -->
+  <link rel="preconnect" href="https://api.mapbox.com/" crossorigin>
+  <link rel="preconnect" href="https://events.mapbox.com/" crossorigin>
   <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
   <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.css' rel='stylesheet' />
 
@@ -400,6 +402,12 @@
     display: inline-block;
   }
 
+  /* hover marker */
+
+  .marker {
+    cursor: pointer;
+  }
+
   /* animation / effects */
 
   .darken {
@@ -570,6 +578,7 @@
     </p>
   </section>
   <main id="map"></main>
+
   <nav class="view-menu"></nav>
   <aside class="sidebar hidden">
     <div class="content">
@@ -819,7 +828,8 @@
       // allow the click triggered one to show and it'll interfere with animations
       const popup = new mapboxgl.Popup({
         closeButton: false,
-        className: CONSTANTS.css.fade
+        className: CONSTANTS.css.fade,
+        offset: [0,-10]
       });
 
       popup.setLngLat(current_project.geometry.coordinates)
@@ -1026,17 +1036,6 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
-      const highlight_markers = map.getLayer('projects-catalyze-sv-highlight');
-      map.setLayoutProperty('projects-catalyze-sv-highlight', 'visibility', 'visible');
-      // we need to set unique ids on the features
-
-      const feature_states = ['case',
-        ['boolean', ['feature-state', 'active'], false],
-        1,
-        0
-      ];
-      map.setPaintProperty('projects-catalyze-sv-highlight', 'icon-opacity', feature_states);
-
       // ============ PRELOADER =============
 
       // animate hiding loader on map load
@@ -1157,7 +1156,9 @@
         state.active_project = null;
 
         // remove current popup element after animation ends
-        animate_popup_removal(popup.getElement());
+        if (popup.getElement()) {
+          animate_popup_removal(popup.getElement());
+        }
       });
 
       sidebar_info.addEventListener('click', (e) => {
@@ -1175,46 +1176,42 @@
       });
 
       // create a DOM element for the marker
-      var el = document.createElement('div');
-      el.className = 'marker';
-      el.style.backgroundImage = 'url(https://placekitten.com/g/50/50';
-      el.style.width = 50 + 'px';
-      el.style.height = 50 + 'px';
-      el.style.borderRadius = '999px'
-      state.active_marker = new mapboxgl.Marker(el);
+      // url encoded bg img
+      const star_svg_encoded = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.5' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E")`
 
-      el.addEventListener('mouseleave', (e) => {
-        state.active_marker.remove();
+      const marker = document.createElement('div');
+      marker.className = 'marker';
+      marker.style.backgroundImage = star_svg_encoded;
+      marker.style.width = '18px';
+      marker.style.height = '18px';
+      // el.style.borderRadius = '999px'
+
+      state.active_marker = new mapboxgl.Marker(marker, {
+        offset: [0,-13]
       });
 
-      map.on('mouseenter', 'projects-catalyze-sv-highlight', (e) => {
+      // marker.addEventListener('mouseleave', (e) => {
+      //   console.log('left');
+      //   state.active_marker.remove();
+      // });
 
+      // map.on("mousemove", 'projects-catalyze-sv', function(e) {
+      //   if (e.features.length > 0) {
+      //     console.log('active');
+      //       state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
+      //   }
+      // });
 
-        // el.style.borderRadius = '999px'
+      map.on('mouseenter', 'projects-catalyze-sv', (e) => {
 
         // add marker to map
         state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
 
-
-
-        // if (!state.active_marker) {
-        //   state.active_marker = e.features[0].id;
-        // }
-        //
-        // map.setFeatureState({
-        //   source: 'composite',
-        //   sourceLayer: CONSTANTS.projects_source_layer,
-        //   // currently issue with mapbox data uploads preventing unique ids
-        //   // https://github.com/mapbox/mapbox-gl-js/issues/8284
-        //   // so hover effects will affect multiple features
-        //   id: state.active_marker
-        // }, {
-        //   active: true
-        // });
-
       });
 
-      map.on('mouseleave', 'projects-catalyze-sv-highlight', (e) => {
+      map.on('mouseleave', 'projects-catalyze-sv', (e) => {
+
+        state.active_marker.remove();
 
         // actually we need to store the id in a outer scope state var from mouseenter to be used in the mouseleave function
         // map.setFeatureState({
