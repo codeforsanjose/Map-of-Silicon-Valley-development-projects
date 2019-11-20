@@ -408,6 +408,8 @@
     cursor: pointer;
     /* prevent mouseout event trigger of feature */
     pointer-events: none;
+    animation: fadeInOut ease 2s infinite;
+    -webkit-animation: fadeInOut ease 2s infinite;
   }
 
   /* animation / effects */
@@ -1013,15 +1015,20 @@
         popup: [0,-15],
         marker: [0,-14]
       },
+      layers: {
+        projects: 'projects-catalyze-sv',
+        projects_source: 'Projects_Catalyze_SV',
+        dev_zones: 'dev-zones-catalyze-sv',
+        dev_zones_source: 'Dev_Zones_Catalyze_SV'
+      },
       marker_size: '18px',
-      marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.5' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
-      projects_layer: 'projects-catalyze-sv',
-      projects_source_layer: 'Projects_Catalyze_SV',
+      marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
       projects_id_key: 'Project Name',
       status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)'
     }
     const data = {
       features: [],
+      features_map: {},
       // phase names and their associated colors
       phases: {
         'Application': '#555',
@@ -1071,6 +1078,19 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
+
+      // async function get_datasets() {
+      //   const dev_zone_data_id = 'ck22go3ye24oy2nqxhoqi087g';
+      //
+      //    let data = await fetch(`https://api.mapbox.com/datasets/v1/sunnymui/${dev_zone_data_id}/features?access_token=sk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2szNWd3ZGZsMWdneTNicG1wOXd6N3pnNyJ9.dywuzum1UzNtn1TmW--X7g`);
+      //
+      //   let json = await data.json();
+      //
+      //   console.log(json);
+      // }
+      //
+      // get_datasets();
+
       // ============ PRELOADER =============
 
       // animate hiding loader on map load
@@ -1090,7 +1110,7 @@
       // ========= MAP UI / VIEW CREATION ============
 
       // fit map viewport to all plotted projects
-      const projects_bounds = get_bounds_of_source_layer(CONSTANTS.projects_source_layer, CONSTANTS.projects_id_key);
+      const projects_bounds = get_bounds_of_source_layer(CONSTANTS.layers.projects_source, CONSTANTS.projects_id_key);
 
       map.fitBounds(projects_bounds, {
         padding: 100
@@ -1136,9 +1156,16 @@
         // only need to get the features once
         if(!state.markers_saved) {
           // grab the features on the projects layer
-          const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.projects_layer]});
-          // filter any duplicates out by name and save the features for later use
+          const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.layers.projects]});
+          // filter duplicates by name, save features in original format for later use
           data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
+          // create map of features by project name
+          data.features_map = data.features.reduce((accumulator, current_item) => {
+            accumulator[current_item.properties['Project Name']] = current_item;
+            return accumulator
+          }, {});
+
+          console.log(data.features_map);
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
@@ -1169,7 +1196,7 @@
       });
 
       // When a click event occurs on a marker in the projects layer, show info
-      map.on('click', CONSTANTS.projects_layer, (e) => {
+      map.on('click', CONSTANTS.layers.projects, (e) => {
 
         const current_project = e.features[0];
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
@@ -1217,7 +1244,7 @@
         }
       });
 
-      map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
+      map.on('mouseenter', CONSTANTS.layers.projects, function (e) {
         // Change the cursor to a pointer when the mouse is over the projects layer
         map.getCanvas().style.cursor = 'pointer';
 
@@ -1229,7 +1256,7 @@
         }
       });
 
-      map.on('mouseleave', CONSTANTS.projects_layer, function (e) {
+      map.on('mouseleave', CONSTANTS.layers.projects, function (e) {
         // Change it back to a cursor when it leaves
         map.getCanvas().style.cursor = '';
 
@@ -1239,6 +1266,15 @@
           // hide the active marker overlay
           state.active_marker.remove();
         }
+      });
+
+      map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
+        const current_project = e.features[0].properties['Project Name']
+        console.log(data.features_map[current_project]);
+      });
+
+      map.on('mouseleave', CONSTANTS.layers.dev_zones, function (e) {
+
       });
     });
 
