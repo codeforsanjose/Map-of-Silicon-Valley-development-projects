@@ -218,6 +218,10 @@
     box-shadow: 0px 1px 3px #00000069;
   }
 
+  .sidebar label {
+    font-weight: 600;
+  }
+
   .sidebar .title {
     padding-bottom: 0.5em;
     border-bottom: 1px solid #ccc;
@@ -408,6 +412,7 @@
     cursor: pointer;
     /* prevent mouseout event trigger of feature */
     pointer-events: none;
+    will-change: opacity;
     animation: fadeInOut ease 2s infinite;
     -webkit-animation: fadeInOut ease 2s infinite;
   }
@@ -725,14 +730,14 @@
           ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
           : '';
       const presented_date_html = presented_date && presented_date !== ''
-          ? `<li>Presented to PAC on: ${presented_date}</li>`
+          ? `<li><label>Presented to PAC on:</label> ${presented_date}</li>`
           : '';
       const catalyze_status_html = catalyze_status && catalyze_status !== ''
-          ? `<p>Catalyze SV Review Status: ${catalyze_status}</p>`
+          ? `<p><label>Catalyze SV Review Status:</label> ${catalyze_status}</p>`
           : '';
       const next_meet_html = next_meet && next_meet !== ''
-          ? `<li>Next Public Meeting: ${next_meet}</li>`
-          : `<li>Next Public Meeting: TBD</li>`;
+          ? `<li><label>Next Public Meeting:</label> ${next_meet}</li>`
+          : `<li><label>Next Public Meeting:</label> TBD</li>`;
       const city_docs_html = city_docs && city_docs !== ''
           ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
@@ -755,23 +760,23 @@
         <p class="address">
           ${Address}, ${City}, ${State} ${Zip}
         </p>
-        <button class="locate">Center on Map</button>
+        <button class="locate">&#9733; Center on Map</button>
         <p>
           ${project_type}
         </p>
         <ul>
           <li>
-            Owner/Developer: ${developer}
+            <label>Owner/Developer:</label> ${developer}
           </li>
           ${presented_date_html}
           ${next_meet_html}
         </ul>
         <hr />
         <h4>Resources & Links</h4>
+        ${catalyze_status_html}
         <p>
           Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
         </p>
-        ${catalyze_status_html}
         <p>
           ${catalyze_scorecard_html}
           ${catalyze_letter_html}
@@ -1161,11 +1166,9 @@
           data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
           // create map of features by project name
           data.features_map = data.features.reduce((accumulator, current_item) => {
-            accumulator[current_item.properties['Project Name']] = current_item;
+            accumulator[current_item.properties[CONSTANTS.projects_id_key]] = current_item;
             return accumulator
           }, {});
-
-          console.log(data.features_map);
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
@@ -1207,7 +1210,21 @@
         show_sidebar(current_project);
         popup = make_name_popup(current_project).addTo(map);
         // show active marker overlaid current feature
-        state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
+        state.active_marker.setLngLat(current_project.geometry.coordinates).addTo(map);
+      });
+
+      map.on('click', CONSTANTS.layers.dev_zones, (e) => {
+        const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
+        const current_project = data.features_map[current_project_name];
+        const current_listing = state.listings[current_project_name];
+
+        highlight_active_project(state.active_project, current_listing);
+
+        show_sidebar(current_project);
+        popup.remove();
+        popup = make_name_popup(current_project).addTo(map);
+        // show active marker overlaid current feature
+        state.active_marker.setLngLat(current_project.geometry.coordinates).addTo(map);
       });
 
       close_btn.addEventListener('click', () => {
@@ -1243,6 +1260,27 @@
           map.panTo(current_project.geometry.coordinates);
         }
       });
+      const popups = [];
+
+      const clear_popups = () => {
+        popups.forEach(popup => popup.remove());
+        popups.length = 0;
+      };
+
+      const clear_active = (e, popup) => {
+        // Change it back to a cursor when it leaves
+        map.getCanvas().style.cursor = '';
+
+        // don't want mouseovers to change the opened popup when sidebar is open
+        if (!state.sidebar_open) {
+          clear_popups();
+          popup.remove();
+          // hide the active marker overlay
+          state.active_marker.remove();
+
+          map.off('mouseleave', clear_active);
+        }
+      };
 
       map.on('mouseenter', CONSTANTS.layers.projects, function (e) {
         // Change the cursor to a pointer when the mouse is over the projects layer
@@ -1251,31 +1289,57 @@
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
           popup = make_name_popup(e.features[0]).addTo(map);
+          popups.push(popup);
           // show active marker overlaid current feature
           state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
+
+          map.on('mouseleave', CONSTANTS.layers.projects, clear_active.bind(this, e, popup));
         }
       });
 
-      map.on('mouseleave', CONSTANTS.layers.projects, function (e) {
-        // Change it back to a cursor when it leaves
-        map.getCanvas().style.cursor = '';
+      // map.on('mouseleave', CONSTANTS.layers.projects, function (e) {
+      //   // Change it back to a cursor when it leaves
+      //   map.getCanvas().style.cursor = '';
+      //
+      //   // don't want mouseovers to change the opened popup when sidebar is open
+      //   if (!state.sidebar_open) {
+      //     popup.remove();
+      //     // hide the active marker overlay
+      //     state.active_marker.remove();
+      //   }
+      // });
+
+      map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
+        const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
+        const corresponding_feature = data.features_map[current_project];
+
+        // Change the cursor to a pointer when the mouse is over the projects layer
+        map.getCanvas().style.cursor = 'pointer';
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          popup.remove();
-          // hide the active marker overlay
-          state.active_marker.remove();
+          popup = make_name_popup(corresponding_feature).addTo(map);
+          popups.push(popup);
+          // show active marker overlaid current feature
+          state.active_marker.setLngLat(corresponding_feature.geometry.coordinates).addTo(map);
+
+          map.on('mouseleave', CONSTANTS.layers.dev_zones, clear_active.bind(this, e, popup));
         }
       });
 
-      map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
-        const current_project = e.features[0].properties['Project Name']
-        console.log(data.features_map[current_project]);
-      });
-
-      map.on('mouseleave', CONSTANTS.layers.dev_zones, function (e) {
-
-      });
+      // map.on('mouseleave', CONSTANTS.layers.dev_zones, function (e) {
+      //   console.log('eft')
+      //   // Change it back to a cursor when it leaves
+      //   map.getCanvas().style.cursor = '';
+      //
+      //   // don't want mouseovers to change the opened popup when sidebar is open
+      //   if (!state.sidebar_open) {
+      //     popup.remove();
+      //     // hide the active marker overlay
+      //     state.active_marker.remove();
+      //
+      //   }
+      // });
     });
 
   </script>
