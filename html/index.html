@@ -960,14 +960,15 @@
       // named animationend callback so listener can be deleted to prevent memory leaks
       const remove_popup = (e) => {
         popup.removeEventListener('animationend', remove_popup);
-        popup.remove();
+        // popup.remove();
+        clear_popups(state);
       };
 
       // only remove popup after css animation completes
       popup.addEventListener('animationend', remove_popup);
     }
 
-    function highlight_active_project(active_project, current_listing) {
+    function highlight_active_listing(active_project, current_listing) {
       /*
       Highlights the currently selected project/marker in the list view.
       Args: state (obj) - the state obj containing state.active_project whether it's
@@ -986,13 +987,49 @@
       state.active_project = current_listing;
     }
 
+    function activate_feature(feature_data, state) {
+
+      const {feature, listing} = feature_data;
+
+      highlight_active_listing(state.active_project, listing);
+      show_sidebar(feature);
+      // clear extra popups from click event on a point propagating to multiple layers
+      clear_popups(state);
+      const popup = make_name_popup(feature).addTo(map);
+      state.popups.push(popup);
+
+      // show active marker overlaid current feature
+      state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
+    }
+
+    function clear_popups(state) {
+      state.popups.forEach(popup => popup.remove());
+      state.popups.length = 0;
+    };
+
+    function deactivate() {
+      // Change it back to a cursor when it leaves
+      map.getCanvas().style.cursor = '';
+
+      // don't want mouseovers to change the opened popup when sidebar is open
+      if (!state.sidebar_open) {
+        clear_popups(state);
+        // hide the active marker overlay
+        state.active_marker.remove();
+
+        map.off('mouseleave', deactivate);
+      }
+    }
+
     // =============== APP LOGIC ===============
 
     const state = {
       sidebar_open: false,
-      markers_saved: false,
+      // markers_saved: false,
       tabs: {},
+      popups: [],
       listings: {},
+      // active_popup: false,
       active_tab: null,
       active_project: null,
       active_view: null,
@@ -1083,19 +1120,6 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
-
-      // async function get_datasets() {
-      //   const dev_zone_data_id = 'ck22go3ye24oy2nqxhoqi087g';
-      //
-      //    let data = await fetch(`https://api.mapbox.com/datasets/v1/sunnymui/${dev_zone_data_id}/features?access_token=sk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2szNWd3ZGZsMWdneTNicG1wOXd6N3pnNyJ9.dywuzum1UzNtn1TmW--X7g`);
-      //
-      //   let json = await data.json();
-      //
-      //   console.log(json);
-      // }
-      //
-      // get_datasets();
-
       // ============ PRELOADER =============
 
       // animate hiding loader on map load
@@ -1141,12 +1165,6 @@
       const legend_elements = generate_legend(data.phases, data.legend_order);
       legend.append(legend_elements);
 
-      // store a popup reference to reassign/close/reopen in multiple events
-      let popup = new mapboxgl.Popup({
-        closeButton: false,
-        className: CONSTANTS.css.fade
-      });
-
       // Add zoom, fullscreen, rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
       map.addControl(new mapboxgl.FullscreenControl({
@@ -1159,20 +1177,19 @@
       // create the list view
       map.on('idle', () => {
         // only need to get the features once
-        if(!state.markers_saved) {
+        if(!data.features.length) {
           // grab the features on the projects layer
           const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.layers.projects]});
           // filter duplicates by name, save features in original format for later use
           data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
           // create map of features by project name
-          data.features_map = data.features.reduce((accumulator, current_item) => {
-            accumulator[current_item.properties[CONSTANTS.projects_id_key]] = current_item;
-            return accumulator
+          data.features_map = data.features.reduce((map, current_item) => {
+            map[current_item.properties[CONSTANTS.projects_id_key]] = current_item;
+            return map
           }, {});
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
-          state.markers_saved = true;
         }
       });
 
@@ -1188,14 +1205,11 @@
       list_view.addEventListener('click', (e) => {
         const current_listing = e.target.closest('li');
         const current_project_id = current_listing.getAttribute('data-index');
-        const current_project = data.features[current_project_id];
 
-        highlight_active_project(state.active_project, current_listing);
-
-        show_sidebar(current_project);
-        // must remove existing popup cuz multiple of these can be showing
-        popup.remove();
-        popup = make_name_popup(current_project).addTo(map);
+        activate_feature({
+          feature: data.features[current_project_id],
+          listing: current_listing
+        }, state);
       });
 
       // When a click event occurs on a marker in the projects layer, show info
@@ -1203,28 +1217,20 @@
 
         const current_project = e.features[0];
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
-        const current_listing = state.listings[current_project_name];
 
-        highlight_active_project(state.active_project, current_listing);
-
-        show_sidebar(current_project);
-        popup = make_name_popup(current_project).addTo(map);
-        // show active marker overlaid current feature
-        state.active_marker.setLngLat(current_project.geometry.coordinates).addTo(map);
+        activate_feature({
+          feature: current_project,
+          listing: state.listings[current_project_name]
+        }, state);
       });
 
       map.on('click', CONSTANTS.layers.dev_zones, (e) => {
         const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
-        const current_project = data.features_map[current_project_name];
-        const current_listing = state.listings[current_project_name];
 
-        highlight_active_project(state.active_project, current_listing);
-
-        show_sidebar(current_project);
-        popup.remove();
-        popup = make_name_popup(current_project).addTo(map);
-        // show active marker overlaid current feature
-        state.active_marker.setLngLat(current_project.geometry.coordinates).addTo(map);
+        activate_feature({
+          feature: data.features_map[current_project_name],
+          listing: state.listings[current_project_name]
+        }, state);
       });
 
       close_btn.addEventListener('click', () => {
@@ -1235,14 +1241,13 @@
         // remove deemphasizing styles
         legend.classList.toggle(CONSTANTS.css.transparent);
         state.active_view.classList.remove(CONSTANTS.css.darken);
-        // clear active
+        // clear active in list
         state.active_project.classList.remove(CONSTANTS.css.active)
         state.active_project = null;
 
         // remove current popup element after animation ends
-        if (popup.getElement()) {
-          animate_popup_removal(popup.getElement());
-        }
+        animate_popup_removal(state.popups.slice(-1)[0].getElement());
+
         // hide the active marker overlay
         state.active_marker.remove();
       });
@@ -1260,27 +1265,20 @@
           map.panTo(current_project.geometry.coordinates);
         }
       });
-      const popups = [];
 
-      const clear_popups = () => {
-        popups.forEach(popup => popup.remove());
-        popups.length = 0;
-      };
-
-      const clear_active = (e, popup) => {
-        // Change it back to a cursor when it leaves
-        map.getCanvas().style.cursor = '';
-
-        // don't want mouseovers to change the opened popup when sidebar is open
-        if (!state.sidebar_open) {
-          clear_popups();
-          popup.remove();
-          // hide the active marker overlay
-          state.active_marker.remove();
-
-          map.off('mouseleave', clear_active);
-        }
-      };
+      // const clear_active = (e, popup) => {
+      //   // Change it back to a cursor when it leaves
+      //   map.getCanvas().style.cursor = '';
+      //
+      //   // don't want mouseovers to change the opened popup when sidebar is open
+      //   if (!state.sidebar_open) {
+      //     clear_popups(state);
+      //     // hide the active marker overlay
+      //     state.active_marker.remove();
+      //
+      //     map.off('mouseleave', clear_active);
+      //   }
+      // };
 
       map.on('mouseenter', CONSTANTS.layers.projects, function (e) {
         // Change the cursor to a pointer when the mouse is over the projects layer
@@ -1288,12 +1286,12 @@
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          popup = make_name_popup(e.features[0]).addTo(map);
-          popups.push(popup);
+          const popup = make_name_popup(e.features[0]).addTo(map);
+          state.popups.push(popup);
           // show active marker overlaid current feature
           state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
 
-          map.on('mouseleave', CONSTANTS.layers.projects, clear_active.bind(this, e, popup));
+          map.on('mouseleave', CONSTANTS.layers.projects, deactivate);
         }
       });
 
@@ -1318,12 +1316,12 @@
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          popup = make_name_popup(corresponding_feature).addTo(map);
-          popups.push(popup);
+          const popup = make_name_popup(corresponding_feature).addTo(map);
+          state.popups.push(popup);
           // show active marker overlaid current feature
           state.active_marker.setLngLat(corresponding_feature.geometry.coordinates).addTo(map);
 
-          map.on('mouseleave', CONSTANTS.layers.dev_zones, clear_active.bind(this, e, popup));
+          map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate);
         }
       });
 
