@@ -747,7 +747,7 @@
 
       // template for the sidebar content
       return `
-        <h3 class="title">${project_name}</h3>
+        <h2 class="title">${project_name}</h3>
         <p class="status">
           <span>
             <span class="status-tag" style="background:${phase_color}">${Phase}</span>
@@ -772,7 +772,7 @@
           ${next_meet_html}
         </ul>
         <hr />
-        <h4>Resources & Links</h4>
+        <h3>Resources & Links</h4>
         ${catalyze_status_html}
         <p>
           Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
@@ -988,7 +988,13 @@
     }
 
     function activate_feature(feature_data, state) {
-
+      /*
+      Puts a feature into an active state, denoting that it is currently
+      being viewed and the details for it will be showing.
+      Args: feature_date (obj) - config obj that requires {feature: feature_geojson_obj, listing: listing_dom_element}
+            state (obj) - the state object
+      Return: na
+      */
       const {feature, listing} = feature_data;
 
       highlight_active_listing(state.active_project, listing);
@@ -1002,12 +1008,36 @@
       state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
     }
 
+    function hoverize_feature(feature, state) {
+      /*
+      Puts a feature into a hover state ie styles to hint interactivity
+      or release information scent.
+      Args: feature (obj) - the feature geojson object to hoverize style
+            state (obj) - the state object
+      return: na
+      */
+      const popup = make_name_popup(feature).addTo(map);
+      state.popups.push(popup);
+      // show active marker overlaid current feature
+      state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
+    }
+
     function clear_popups(state) {
+      /*
+      Remove all popups from the map.
+      Args: state (obj) - the state object
+      Return: na
+      */
       state.popups.forEach(popup => popup.remove());
       state.popups.length = 0;
     };
 
-    function deactivate() {
+    function deactivate(state) {
+      /*
+      Removes active styles and elements for a feature.
+      Args:
+      Return:
+      */
       // Change it back to a cursor when it leaves
       map.getCanvas().style.cursor = '';
 
@@ -1017,7 +1047,7 @@
         // hide the active marker overlay
         state.active_marker.remove();
 
-        map.off('mouseleave', deactivate);
+        // map.off('mouseleave', deactivate);
       }
     }
 
@@ -1114,7 +1144,8 @@
       container: 'map',
       style: CONSTANTS.mapbox_style_url,
       center: [-121.898395, 37.322972],
-      zoom: 11
+      zoom: 11,
+      logoPosition: 'bottom-right'
     });
 
     // wait for map to finish load before executing map functions
@@ -1246,7 +1277,7 @@
         state.active_project = null;
 
         // remove current popup element after animation ends
-        animate_popup_removal(state.popups.slice(-1)[0].getElement());
+        animate_popup_removal(state.popups[0].getElement());
 
         // hide the active marker overlay
         state.active_marker.remove();
@@ -1266,46 +1297,17 @@
         }
       });
 
-      // const clear_active = (e, popup) => {
-      //   // Change it back to a cursor when it leaves
-      //   map.getCanvas().style.cursor = '';
-      //
-      //   // don't want mouseovers to change the opened popup when sidebar is open
-      //   if (!state.sidebar_open) {
-      //     clear_popups(state);
-      //     // hide the active marker overlay
-      //     state.active_marker.remove();
-      //
-      //     map.off('mouseleave', clear_active);
-      //   }
-      // };
-
       map.on('mouseenter', CONSTANTS.layers.projects, function (e) {
         // Change the cursor to a pointer when the mouse is over the projects layer
         map.getCanvas().style.cursor = 'pointer';
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          const popup = make_name_popup(e.features[0]).addTo(map);
-          state.popups.push(popup);
-          // show active marker overlaid current feature
-          state.active_marker.setLngLat(e.features[0].geometry.coordinates).addTo(map);
-
-          map.on('mouseleave', CONSTANTS.layers.projects, deactivate);
+          hoverize_feature(e.features[0], state);
         }
       });
 
-      // map.on('mouseleave', CONSTANTS.layers.projects, function (e) {
-      //   // Change it back to a cursor when it leaves
-      //   map.getCanvas().style.cursor = '';
-      //
-      //   // don't want mouseovers to change the opened popup when sidebar is open
-      //   if (!state.sidebar_open) {
-      //     popup.remove();
-      //     // hide the active marker overlay
-      //     state.active_marker.remove();
-      //   }
-      // });
+      map.on('mouseleave', CONSTANTS.layers.projects, deactivate.bind(this, state));
 
       map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
         const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
@@ -1316,28 +1318,12 @@
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          const popup = make_name_popup(corresponding_feature).addTo(map);
-          state.popups.push(popup);
-          // show active marker overlaid current feature
-          state.active_marker.setLngLat(corresponding_feature.geometry.coordinates).addTo(map);
-
-          map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate);
+          hoverize_feature(corresponding_feature, state);
         }
       });
 
-      // map.on('mouseleave', CONSTANTS.layers.dev_zones, function (e) {
-      //   console.log('eft')
-      //   // Change it back to a cursor when it leaves
-      //   map.getCanvas().style.cursor = '';
-      //
-      //   // don't want mouseovers to change the opened popup when sidebar is open
-      //   if (!state.sidebar_open) {
-      //     popup.remove();
-      //     // hide the active marker overlay
-      //     state.active_marker.remove();
-      //
-      //   }
-      // });
+      map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
+
     });
 
   </script>
