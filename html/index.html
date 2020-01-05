@@ -617,6 +617,13 @@
   </script>
 
   <script>
+    function is_valid(input) {
+      // check that input is defined
+      return (input &&
+              // check if na
+              input.toLowerCase() !== 'na')
+    }
+
     function getUniqueFeatures(array, comparatorProperty) {
       // Because features come from tiled vector data, feature geometries may be split
       // or duplicated across tile boundaries and, as a result, features may appear
@@ -1118,7 +1125,7 @@
         'In Design': '#86619f',
         'In Review': '#268adb',
         'Approved': '#358c29',
-        'Under Construction': '#aa8f00'
+        'Construction': '#aa8f00'
       },
       // the order to output the legend items in
       legend_order: [
@@ -1126,7 +1133,7 @@
         'In Design',
         'In Review',
         'Approved',
-        'Under Construction'
+        'Construction'
       ],
       // view types in the view menu
       view_types: [{
