@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="">
+<html class="no-js" lang="en">
 
 <head>
   <meta charset="utf-8">
@@ -618,10 +618,18 @@
 
   <script>
     function is_valid(input) {
+      /*
+      Returns truthy or falsey values based on the validation conditions being met.
+      If undefined, empty string, or 'na', it'll return falsey.
+      Args: input (str, undefined, null) - typically a string with the input text to validate
+        but can also be undefined or null if a blank input field
+      Return: truthey/falsey (booleanish) - true or one of several falsey values:
+        undefined, null, '', false, depending on the value inputted
+      */
       // check that input is defined
       return (input &&
               // check if na
-              input.toLowerCase() !== 'na')
+              input.toLowerCase() !== 'n/a')
     }
 
     function getUniqueFeatures(array, comparatorProperty) {
@@ -731,31 +739,31 @@
              "Next Public Meeting" : next_meet,
              "Project Website" : website,
              "Owner/Developer Name" : developer,
-             "Current Status With City" : detail_status,
+             "Current Status With City" : phase_detail,
              "Catalyze SV's Scorecard" : score,
              "Catalyze SV's Letter" : catalyze_letter,
            } = marker_properties;
 
       // show/hide some info dependent on if it is available in dataset
-      const catalyze_letter_html = catalyze_letter && catalyze_letter !== ''
+      const catalyze_letter_html = is_valid(catalyze_letter)
           ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
           : '';
-      const catalyze_scorecard_html = score && score !== ''
+      const catalyze_scorecard_html = is_valid(score)
           ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">See Catalyze SV Scorecard</a>`
           : '';
-      const website_html = website && website !== ''
+      const website_html = is_valid(website)
           ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
           : '';
-      const presented_date_html = presented_date && presented_date !== ''
+      const presented_date_html = is_valid(presented_date)
           ? `<li><label>Presented to PAC on:</label> ${presented_date}</li>`
           : '';
-      const catalyze_status_html = catalyze_status && catalyze_status !== ''
+      const catalyze_status_html = is_valid(catalyze_status)
           ? `<p><label>Catalyze SV Review Status:</label> ${catalyze_status}</p>`
           : '';
-      const next_meet_html = next_meet && next_meet !== ''
+      const next_meet_html = is_valid(next_meet)
           ? `<li><label>Next Public Meeting:</label> ${next_meet}</li>`
           : `<li><label>Next Public Meeting:</label> TBD</li>`;
-      const city_docs_html = city_docs && city_docs !== ''
+      const city_docs_html = is_valid(city_docs)
           ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
 
@@ -769,7 +777,7 @@
           <span>
             <span class="status-tag" style="background:${phase_color}">${Phase}</span>
           </span>
-          <span class="status-detail">${detail_status}</span>
+          <span class="status-detail">${phase_detail}</span>
           <span>
             <a href="#" class="status-explain" tooltip="${tooltip}">What's This?</a>
           </span>
