@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="">
+<html class="no-js" lang="en">
 
 <head>
   <meta charset="utf-8">
@@ -9,8 +9,11 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
   <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Lato:400,700&display=swap" rel="stylesheet">
   <!-- Mapbox -->
+  <link rel="preconnect" href="https://api.mapbox.com/" crossorigin>
+  <link rel="preconnect" href="https://events.mapbox.com/" crossorigin>
   <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
   <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.css' rel='stylesheet' />
 
@@ -215,6 +218,10 @@
     box-shadow: 0px 1px 3px #00000069;
   }
 
+  .sidebar label {
+    font-weight: 600;
+  }
+
   .sidebar .title {
     padding-bottom: 0.5em;
     border-bottom: 1px solid #ccc;
@@ -336,6 +343,15 @@
     font-weight: normal;
   }
 
+  /* Branding Attribution */
+
+  .branding {
+    position: absolute;
+    z-index: 1;
+    bottom: 0.5em;
+    left: 0.5em;
+  }
+
   /* List View */
 
   .list-view {
@@ -397,6 +413,17 @@
     font-style: italic;
     margin: 0;
     display: inline-block;
+  }
+
+  /* hover marker */
+
+  .marker {
+    cursor: pointer;
+    /* prevent mouseout event trigger of feature */
+    pointer-events: none;
+    will-change: opacity;
+    animation: fadeInOut ease 2s infinite;
+    -webkit-animation: fadeInOut ease 2s infinite;
   }
 
   /* animation / effects */
@@ -569,6 +596,7 @@
     </p>
   </section>
   <main id="map"></main>
+
   <nav class="view-menu"></nav>
   <aside class="sidebar hidden">
     <div class="content">
@@ -578,6 +606,7 @@
   </aside>
   <aside class="legend">
   </aside>
+  <section class="branding"></section>
   <section id="list" class="list-view">
     <div class="list-header"></div>
   </section>
@@ -588,18 +617,33 @@
   </script>
 
   <script>
+    function is_valid(input) {
+      /*
+      Returns truthy or falsey values based on the validation conditions being met.
+      If undefined, empty string, or 'na', it'll return falsey.
+      Args: input (str, undefined, null) - typically a string with the input text to validate
+        but can also be undefined or null if a blank input field
+      Return: truthey/falsey (booleanish) - true or one of several falsey values:
+        undefined, null, '', false, depending on the value inputted
+      */
+      // check that input is defined
+      return (input &&
+              // check if na
+              input.toLowerCase() !== 'n/a')
+    }
+
     function getUniqueFeatures(array, comparatorProperty) {
-      const existingFeatureKeys = {};
       // Because features come from tiled vector data, feature geometries may be split
       // or duplicated across tile boundaries and, as a result, features may appear
       // multiple times in query results.
+      const existingFeatureKeys = {};
       const uniqueFeatures = array.filter(function(el) {
-      if (existingFeatureKeys[el.properties[comparatorProperty]]) {
-        return false;
-      } else {
-        existingFeatureKeys[el.properties[comparatorProperty]] = true;
-        return true;
-      }
+        if (existingFeatureKeys[el.properties[comparatorProperty]]) {
+          return false;
+        } else {
+          existingFeatureKeys[el.properties[comparatorProperty]] = true;
+          return true;
+        }
       });
 
       return uniqueFeatures;
@@ -695,31 +739,31 @@
              "Next Public Meeting" : next_meet,
              "Project Website" : website,
              "Owner/Developer Name" : developer,
-             "Current Status With City" : detail_status,
+             "Current Status With City" : phase_detail,
              "Catalyze SV's Scorecard" : score,
              "Catalyze SV's Letter" : catalyze_letter,
            } = marker_properties;
 
       // show/hide some info dependent on if it is available in dataset
-      const catalyze_letter_html = catalyze_letter && catalyze_letter !== ''
+      const catalyze_letter_html = is_valid(catalyze_letter)
           ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
           : '';
-      const catalyze_scorecard_html = score && score !== ''
+      const catalyze_scorecard_html = is_valid(score)
           ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">See Catalyze SV Scorecard</a>`
           : '';
-      const website_html = website && website !== ''
+      const website_html = is_valid(website)
           ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
           : '';
-      const presented_date_html = presented_date && presented_date !== ''
-          ? `<li>Presented to PAC on: ${presented_date}</li>`
+      const presented_date_html = is_valid(presented_date)
+          ? `<li><label>Presented to PAC on:</label> ${presented_date}</li>`
           : '';
-      const catalyze_status_html = catalyze_status && catalyze_status !== ''
-          ? `<p>Catalyze SV Review Status: ${catalyze_status}</p>`
+      const catalyze_status_html = is_valid(catalyze_status)
+          ? `<p><label>Catalyze SV Review Status:</label> ${catalyze_status}</p>`
           : '';
-      const next_meet_html = next_meet && next_meet !== ''
-          ? `<li>Next Public Meeting: ${next_meet}</li>`
-          : `<li>Next Public Meeting: TBD</li>`;
-      const city_docs_html = city_docs && city_docs !== ''
+      const next_meet_html = is_valid(next_meet)
+          ? `<li><label>Next Public Meeting:</label> ${next_meet}</li>`
+          : `<li><label>Next Public Meeting:</label> TBD</li>`;
+      const city_docs_html = is_valid(city_docs)
           ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
 
@@ -728,12 +772,12 @@
 
       // template for the sidebar content
       return `
-        <h3 class="title">${project_name}</h3>
+        <h2 class="title">${project_name}</h3>
         <p class="status">
           <span>
             <span class="status-tag" style="background:${phase_color}">${Phase}</span>
           </span>
-          <span class="status-detail">${detail_status}</span>
+          <span class="status-detail">${phase_detail}</span>
           <span>
             <a href="#" class="status-explain" tooltip="${tooltip}">What's This?</a>
           </span>
@@ -741,23 +785,23 @@
         <p class="address">
           ${Address}, ${City}, ${State} ${Zip}
         </p>
-        <button class="locate">Center on Map</button>
+        <button class="locate">&#9733; Center on Map</button>
         <p>
           ${project_type}
         </p>
         <ul>
           <li>
-            Owner/Developer: ${developer}
+            <label>Owner/Developer:</label> ${developer}
           </li>
           ${presented_date_html}
           ${next_meet_html}
         </ul>
         <hr />
-        <h4>Resources & Links</h4>
+        <h3>Resources & Links</h4>
+        ${catalyze_status_html}
         <p>
           Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
         </p>
-        ${catalyze_status_html}
         <p>
           ${catalyze_scorecard_html}
           ${catalyze_letter_html}
@@ -818,13 +862,40 @@
       // allow the click triggered one to show and it'll interfere with animations
       const popup = new mapboxgl.Popup({
         closeButton: false,
-        className: CONSTANTS.css.fade
+        className: CONSTANTS.css.fade,
+        offset: CONSTANTS.offsets.popup
       });
 
       popup.setLngLat(current_project.geometry.coordinates)
            .setText(current_project.properties['Project Name']);
 
       return popup
+    }
+
+    function make_active_marker(svg_img, size, CONSTANTS) {
+      /*
+      Create a DOM element for the marker used as the overlay for the
+      hover/active feature highlightin effect.
+      Args: svg_img (str) - uri encoded svg img xml
+            size (str) - valid size for css width/height
+            CONSTANTS (obj) - to fill in all the constants values
+      Return: marker (obj) - marker instance to use for active marker
+      */
+      // css bg img data uri encoded bg img
+      const star_svg_encoded = `url("data:image/svg+xml,${svg_img}")`
+
+      const marker = document.createElement('div');
+      marker.className = CONSTANTS.css.marker;
+      // set all the marker css style props
+      Object.assign(marker.style, {
+        backgroundImage: star_svg_encoded,
+        width: size,
+        height: size
+      });
+
+      return new mapboxgl.Marker(marker, {
+        offset: CONSTANTS.offsets.marker
+      });
     }
 
     function play_sidebar_animation(sidebar_open) {
@@ -914,14 +985,15 @@
       // named animationend callback so listener can be deleted to prevent memory leaks
       const remove_popup = (e) => {
         popup.removeEventListener('animationend', remove_popup);
-        popup.remove();
+        // popup.remove();
+        clear_popups(state);
       };
 
       // only remove popup after css animation completes
       popup.addEventListener('animationend', remove_popup);
     }
 
-    function highlight_active_project(active_project, current_listing) {
+    function highlight_active_listing(active_project, current_listing) {
       /*
       Highlights the currently selected project/marker in the list view.
       Args: state (obj) - the state obj containing state.active_project whether it's
@@ -940,16 +1012,83 @@
       state.active_project = current_listing;
     }
 
+    function activate_feature(feature_data, state) {
+      /*
+      Puts a feature into an active state, denoting that it is currently
+      being viewed and the details for it will be showing.
+      Args: feature_date (obj) - config obj that requires {feature: feature_geojson_obj, listing: listing_dom_element}
+            state (obj) - the state object
+      Return: na
+      */
+      const {feature, listing} = feature_data;
+
+      highlight_active_listing(state.active_project, listing);
+      show_sidebar(feature);
+      // clear extra popups from click event on a point propagating to multiple layers
+      clear_popups(state);
+      const popup = make_name_popup(feature).addTo(map);
+      state.popups.push(popup);
+
+      // show active marker overlaid current feature
+      state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
+    }
+
+    function hoverize_feature(feature, state) {
+      /*
+      Puts a feature into a hover state ie styles to hint interactivity
+      or release information scent.
+      Args: feature (obj) - the feature geojson object to hoverize style
+            state (obj) - the state object
+      return: na
+      */
+      const popup = make_name_popup(feature).addTo(map);
+      state.popups.push(popup);
+      // show active marker overlaid current feature
+      state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
+    }
+
+    function clear_popups(state) {
+      /*
+      Remove all popups from the map.
+      Args: state (obj) - the state object
+      Return: na
+      */
+      state.popups.forEach(popup => popup.remove());
+      state.popups.length = 0;
+    };
+
+    function deactivate(state) {
+      /*
+      Removes active styles and elements for a feature.
+      Args:
+      Return:
+      */
+      // Change it back to a cursor when it leaves
+      map.getCanvas().style.cursor = '';
+
+      // don't want mouseovers to change the opened popup when sidebar is open
+      if (!state.sidebar_open) {
+        clear_popups(state);
+        // hide the active marker overlay
+        state.active_marker.remove();
+
+        // map.off('mouseleave', deactivate);
+      }
+    }
+
     // =============== APP LOGIC ===============
 
     const state = {
       sidebar_open: false,
-      markers_saved: false,
+      // markers_saved: false,
       tabs: {},
+      popups: [],
       listings: {},
+      // active_popup: false,
       active_tab: null,
       active_project: null,
-      active_view: null
+      active_view: null,
+      active_marker: null
     }
     const CONSTANTS = {
       mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
@@ -966,28 +1105,43 @@
         darken: 'darken',
         active: 'active',
         list: 'list',
-        locate_btn: 'locate'
+        locate_btn: 'locate',
+        marker: 'marker'
       },
-      projects_layer: 'projects-catalyze-sv',
-      projects_source_layer: 'Projects_Catalyze_SV',
+      offsets: {
+        popup: [0,-15],
+        marker: [0,-14]
+      },
+      layers: {
+        projects: 'projects-catalyze-sv',
+        projects_source: 'Projects_Catalyze_SV',
+        dev_zones: 'dev-zones-catalyze-sv',
+        dev_zones_source: 'Dev_Zones_Catalyze_SV'
+      },
+      marker_size: '18px',
+      marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
       projects_id_key: 'Project Name',
-      status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)'
+      status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)',
+      catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png'
     }
     const data = {
       features: [],
+      features_map: {},
       // phase names and their associated colors
       phases: {
         'Application': '#555',
         'In Design': '#86619f',
         'In Review': '#268adb',
-        'Approved': '#358c29'
+        'Approved': '#358c29',
+        'Construction': '#aa8f00'
       },
       // the order to output the legend items in
       legend_order: [
         'Application',
         'In Design',
         'In Review',
-        'Approved'
+        'Approved',
+        'Construction'
       ],
       // view types in the view menu
       view_types: [{
@@ -1006,6 +1160,7 @@
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
     const legend = document.querySelector('.legend');
+    const branding = document.querySelector('.branding');
     const list_view = document.querySelector('.list-view');
     const view_menu = document.querySelector('.view-menu');
     const loader = document.querySelector('.loader');
@@ -1018,7 +1173,8 @@
       container: 'map',
       style: CONSTANTS.mapbox_style_url,
       center: [-121.898395, 37.322972],
-      zoom: 11
+      zoom: 11,
+      logoPosition: 'bottom-right'
     });
 
     // wait for map to finish load before executing map functions
@@ -1040,10 +1196,10 @@
       // hide loader after css animation completes
       loader.addEventListener('animationend', hide_loader);
 
-      // ========= MAP UI CREATION ============
+      // ========= MAP UI / VIEW CREATION ============
 
       // fit map viewport to all plotted projects
-      const projects_bounds = get_bounds_of_source_layer(CONSTANTS.projects_source_layer, CONSTANTS.projects_id_key);
+      const projects_bounds = get_bounds_of_source_layer(CONSTANTS.layers.projects_source, CONSTANTS.projects_id_key);
 
       map.fitBounds(projects_bounds, {
         padding: 100
@@ -1069,30 +1225,36 @@
       const legend_elements = generate_legend(data.phases, data.legend_order);
       legend.append(legend_elements);
 
-      // store a popup reference to reassign/close/reopen in multiple events
-      let popup = new mapboxgl.Popup({
-        closeButton: false,
-        className: CONSTANTS.css.fade
-      });
-
       // Add zoom, fullscreen, rotation controls to the map.
       map.addControl(new mapboxgl.NavigationControl());
       map.addControl(new mapboxgl.FullscreenControl({
         container: document.querySelector('body')
       }));
 
+      // create the hover/active marker overlay
+      state.active_marker = make_active_marker(CONSTANTS.marker_svg, CONSTANTS.marker_size, CONSTANTS);
+
+      // add catalyze branding
+      const brand = document.createElement('img');
+      brand.src = CONSTANTS.catalyze_logo_img;
+      branding.append(brand);
+
       // create the list view
       map.on('idle', () => {
         // only need to get the features once
-        if(!state.markers_saved) {
+        if(!data.features.length) {
           // grab the features on the projects layer
-          const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.projects_layer]});
-          // filter any duplicates out by name and save the features for later use
+          const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.layers.projects]});
+          // filter duplicates by name, save features in original format for later use
           data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
+          // create map of features by project name
+          data.features_map = data.features.reduce((map, current_item) => {
+            map[current_item.properties[CONSTANTS.projects_id_key]] = current_item;
+            return map
+          }, {});
 
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
-          state.markers_saved = true;
         }
       });
 
@@ -1108,27 +1270,32 @@
       list_view.addEventListener('click', (e) => {
         const current_listing = e.target.closest('li');
         const current_project_id = current_listing.getAttribute('data-index');
-        const current_project = data.features[current_project_id];
 
-        highlight_active_project(state.active_project, current_listing);
-
-        show_sidebar(current_project);
-        // must remove existing popup cuz multiple of these can be showing
-        popup.remove();
-        popup = make_name_popup(current_project).addTo(map);
+        activate_feature({
+          feature: data.features[current_project_id],
+          listing: current_listing
+        }, state);
       });
 
       // When a click event occurs on a marker in the projects layer, show info
-      map.on('click', CONSTANTS.projects_layer, (e) => {
+      map.on('click', CONSTANTS.layers.projects, (e) => {
 
         const current_project = e.features[0];
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
-        const current_listing = state.listings[current_project_name];
 
-        highlight_active_project(state.active_project, current_listing);
+        activate_feature({
+          feature: current_project,
+          listing: state.listings[current_project_name]
+        }, state);
+      });
 
-        show_sidebar(current_project);
-        popup = make_name_popup(current_project).addTo(map);
+      map.on('click', CONSTANTS.layers.dev_zones, (e) => {
+        const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
+
+        activate_feature({
+          feature: data.features_map[current_project_name],
+          listing: state.listings[current_project_name]
+        }, state);
       });
 
       close_btn.addEventListener('click', () => {
@@ -1139,12 +1306,15 @@
         // remove deemphasizing styles
         legend.classList.toggle(CONSTANTS.css.transparent);
         state.active_view.classList.remove(CONSTANTS.css.darken);
-        // clear active
+        // clear active in list
         state.active_project.classList.remove(CONSTANTS.css.active)
         state.active_project = null;
 
         // remove current popup element after animation ends
-        animate_popup_removal(popup.getElement());
+        animate_popup_removal(state.popups[0].getElement());
+
+        // hide the active marker overlay
+        state.active_marker.remove();
       });
 
       sidebar_info.addEventListener('click', (e) => {
@@ -1157,31 +1327,37 @@
           if (state.active_view.id === CONSTANTS.css.list) {
             show_view(CONSTANTS.css.map);
           }
-          map.flyTo({
-            center: current_project.geometry.coordinates
-          });
+          map.panTo(current_project.geometry.coordinates);
         }
       });
 
-      map.on('mouseenter', CONSTANTS.projects_layer, function (e) {
+      map.on('mouseenter', CONSTANTS.layers.projects, function (e) {
         // Change the cursor to a pointer when the mouse is over the projects layer
         map.getCanvas().style.cursor = 'pointer';
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          popup = make_name_popup(e.features[0]).addTo(map);
+          hoverize_feature(e.features[0], state);
         }
       });
 
-      map.on('mouseleave', CONSTANTS.projects_layer, function (e) {
-        // Change it back to a cursor when it leaves
-        map.getCanvas().style.cursor = '';
+      map.on('mouseleave', CONSTANTS.layers.projects, deactivate.bind(this, state));
+
+      map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
+        const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
+        const corresponding_feature = data.features_map[current_project];
+
+        // Change the cursor to a pointer when the mouse is over the projects layer
+        map.getCanvas().style.cursor = 'pointer';
 
         // don't want mouseovers to change the opened popup when sidebar is open
         if (!state.sidebar_open) {
-          popup.remove();
+          hoverize_feature(corresponding_feature, state);
         }
       });
+
+      map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
+
     });
 
   </script>
