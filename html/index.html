@@ -207,6 +207,7 @@
 
   .sidebar .content {
     overflow-y: auto;
+    height: 100%;
     max-height: 90vh;
     border-top: 4px solid #617482;
     position: relative;
@@ -216,6 +217,15 @@
     opacity: 1;
     word-wrap: break-word;
     box-shadow: 0px 1px 3px #00000069;
+    transition: height 0.3s ease-in-out,
+                max-height 0.3s ease-in-out;;
+  }
+
+  .sidebar .minimized {
+    height: 2.7em;
+    max-height: 2.7em;
+    transition: height 0.3s ease-in-out,
+                max-height 0.3s ease-in-out;;
   }
 
   .sidebar label {
@@ -294,20 +304,28 @@
     background-color: #1995a6;
   }
 
-  .sidebar .close-btn {
+  .sidebar .controls {
     position: absolute;
-    color: #777;
-    font-size: 1em;
     right: 0;
     padding: 0.5em;
     top: 0;
+    font-size: 1em;
+  }
+
+  .sidebar .close-btn,
+  .sidebar .minimize-btn {
+    color: #666;
     border: 0;
     cursor: pointer;
     background-color: transparent;
   }
 
   .sidebar .close-btn:hover {
-    color: #555;
+    color: #27718e;
+  }
+
+  .sidebar .minimize-btn:hover {
+    color: #27718e;
   }
 
   /* map legend */
@@ -598,12 +616,15 @@
   <main id="map"></main>
 
   <nav class="view-menu"></nav>
-  <aside class="sidebar hidden">
+  <article class="sidebar hidden">
     <div class="content">
-      <button class="close-btn">CLOSE [X]</button>
+      <div class="controls">
+        <button class="minimize-btn">[ - ]</button>
+        <button class="close-btn">CLOSE [ X ]</button>
+      </div>
       <div class="info fade-in"></div>
     </div>
-  </aside>
+  </article>
   <aside class="legend">
   </aside>
   <section class="branding"></section>
@@ -766,7 +787,6 @@
       const city_docs_html = is_valid(city_docs)
           ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
-
       const phase_color = data.phases[Phase];
       const tooltip = CONSTANTS.status_tip
 
@@ -1080,6 +1100,7 @@
 
     const state = {
       sidebar_open: false,
+      sidebar_min: false,
       // markers_saved: false,
       tabs: {},
       popups: [],
@@ -1106,7 +1127,8 @@
         active: 'active',
         list: 'list',
         locate_btn: 'locate',
-        marker: 'marker'
+        marker: 'marker',
+        minimized: 'minimized'
       },
       offsets: {
         popup: [0,-15],
@@ -1159,6 +1181,7 @@
     const sidebar_content = document.querySelector('.sidebar .content');
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
+    const min_btn = document.querySelector('.minimize-btn');
     const legend = document.querySelector('.legend');
     const branding = document.querySelector('.branding');
     const list_view = document.querySelector('.list-view');
@@ -1315,6 +1338,20 @@
 
         // hide the active marker overlay
         state.active_marker.remove();
+      });
+
+      min_btn.addEventListener('click', () => {
+        // minimize the sidebar content
+        sidebar_content.classList.toggle(CONSTANTS.css.minimized);
+        const btn_text = min_btn.textContent;
+        const min_mark = '-';
+        const max_mark = '+';
+        // change the minimize btn icon to reflect toggling action
+        btn_text.includes(min_mark) ?
+          min_btn.textContent = btn_text.replace(min_mark, max_mark) :
+          min_btn.textContent = btn_text.replace(max_mark, min_mark)
+
+        state.sidebar_min = !state_sidebar_min;
       });
 
       sidebar_info.addEventListener('click', (e) => {
