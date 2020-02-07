@@ -3,8 +3,8 @@
 
 <head>
   <meta charset="utf-8">
-  <title>App</title>
-  <meta name="description" content="">
+  <title>Catalyze SV Project Tracker Map</title>
+  <meta name="description" content="Maps development projects in the Silicon Valley area and shares Catalyze SV project scores/evaluations for each">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
@@ -207,6 +207,7 @@
 
   .sidebar .content {
     overflow-y: auto;
+    height: 100%;
     max-height: 90vh;
     border-top: 4px solid #617482;
     position: relative;
@@ -216,6 +217,15 @@
     opacity: 1;
     word-wrap: break-word;
     box-shadow: 0px 1px 3px #00000069;
+    transition: height 0.3s ease-in-out,
+                max-height 0.3s ease-in-out;;
+  }
+
+  .sidebar .minimized {
+    height: 2.7em;
+    max-height: 2.7em;
+    transition: height 0.3s ease-in-out,
+                max-height 0.3s ease-in-out;;
   }
 
   .sidebar label {
@@ -294,20 +304,28 @@
     background-color: #1995a6;
   }
 
-  .sidebar .close-btn {
+  .sidebar .controls {
     position: absolute;
-    color: #777;
-    font-size: 1em;
     right: 0;
     padding: 0.5em;
     top: 0;
+    font-size: 1em;
+  }
+
+  .sidebar .close-btn,
+  .sidebar .minimize-btn {
+    color: #666;
     border: 0;
     cursor: pointer;
     background-color: transparent;
   }
 
   .sidebar .close-btn:hover {
-    color: #555;
+    color: #27718e;
+  }
+
+  .sidebar .minimize-btn:hover {
+    color: #27718e;
   }
 
   /* map legend */
@@ -598,12 +616,15 @@
   <main id="map"></main>
 
   <nav class="view-menu"></nav>
-  <aside class="sidebar hidden">
+  <article class="sidebar hidden">
     <div class="content">
-      <button class="close-btn">CLOSE [X]</button>
+      <div class="controls">
+        <button class="minimize-btn">[ - ]</button>
+        <button class="close-btn">CLOSE [ X ]</button>
+      </div>
       <div class="info fade-in"></div>
     </div>
-  </aside>
+  </article>
   <aside class="legend">
   </aside>
   <section class="branding"></section>
@@ -617,6 +638,23 @@
   </script>
 
   <script>
+    function toggle_text(text, first_text, second_text) {
+      /*
+      Acts as a toggle for textual content in an element by grabbing
+      the text content of an element, checking if the first text
+      exists in the content, replacing just that first text if so
+      (leaving other text unchanged) and vice versa.
+      Args: text (str) - text to check.
+            first_text (str) - first text to toggle between
+            second_text (str) - second text to toggle between
+      Return: text (str) - changed text
+      */
+      text.includes(first_text) ?
+        text = text.replace(first_text, second_text) :
+        text = text.replace(second_text, first_text)
+
+      return text
+    }
     function is_valid(input) {
       /*
       Returns truthy or falsey values based on the validation conditions being met.
@@ -766,7 +804,6 @@
       const city_docs_html = is_valid(city_docs)
           ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
-
       const phase_color = data.phases[Phase];
       const tooltip = CONSTANTS.status_tip
 
@@ -924,7 +961,7 @@
 
     function show_sidebar(feature) {
       /*
-      Show's the sidebar and the info in it for the currently selected feature/marker.
+      Shows the sidebar and the info in it for the currently selected feature/marker.
       Args: feature (obj) - the feature obj for the project to display info for w/ a properties obj
       Return: na
       */
@@ -944,6 +981,33 @@
       sidebar_info.append(active_template);
       // match border color with legend/icon colors for phases
       sidebar_content.style.borderColor = data.phases[feature.properties['Phase']];
+
+      // maximize sidebar content if minimized
+      if (state.sidebar_min) {
+        toggle_sidebar_minimize({
+          sidebar_content: sidebar_content,
+          min_btn: min_btn
+        }, state, CONSTANTS);
+      }
+    }
+
+    function toggle_sidebar_minimize(elements, state, CONSTANTS) {
+      /*
+      Toggles the sidebar minimized state animation and button
+      content change.
+      Args: elements (obj) - contains sidebar_content dom node and the min_btn dom node for the minimize button
+            state (obj) - state for the app
+            CONSTANTS (obj) - constants for the app
+      Return: na
+      */
+      const {sidebar_content, min_btn} = elements;
+
+      // minimize the sidebar content
+      sidebar_content.classList.toggle(CONSTANTS.css.minimized);
+      // change the minimize btn icon to reflect toggling action
+      min_btn.textContent = toggle_text(min_btn.textContent, CONSTANTS.min_icon, CONSTANTS.max_icon)
+
+      state.sidebar_min = !state.sidebar_min;
     }
 
     function show_view(view_type) {
@@ -1080,6 +1144,7 @@
 
     const state = {
       sidebar_open: false,
+      sidebar_min: false,
       // markers_saved: false,
       tabs: {},
       popups: [],
@@ -1106,7 +1171,8 @@
         active: 'active',
         list: 'list',
         locate_btn: 'locate',
-        marker: 'marker'
+        marker: 'marker',
+        minimized: 'minimized'
       },
       offsets: {
         popup: [0,-15],
@@ -1122,7 +1188,9 @@
       marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
       projects_id_key: 'Project Name',
       status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)',
-      catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png'
+      catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png',
+      max_icon: '+',
+      min_icon: '-'
     }
     const data = {
       features: [],
@@ -1159,6 +1227,7 @@
     const sidebar_content = document.querySelector('.sidebar .content');
     const sidebar_info = document.querySelector('.info');
     const close_btn = document.querySelector('.close-btn');
+    const min_btn = document.querySelector('.minimize-btn');
     const legend = document.querySelector('.legend');
     const branding = document.querySelector('.branding');
     const list_view = document.querySelector('.list-view');
@@ -1313,8 +1382,25 @@
         // remove current popup element after animation ends
         animate_popup_removal(state.popups[0].getElement());
 
+        // maximize sidebar content if minimized
+        if (state.sidebar_min) {
+          toggle_sidebar_minimize({
+            sidebar_content: sidebar_content,
+            min_btn: min_btn
+          }, state, CONSTANTS);
+        }
+
         // hide the active marker overlay
         state.active_marker.remove();
+      });
+
+      min_btn.addEventListener('click', () => {
+
+        toggle_sidebar_minimize({
+          sidebar_content: sidebar_content,
+          min_btn: min_btn
+        }, state, CONSTANTS);
+
       });
 
       sidebar_info.addEventListener('click', (e) => {
