@@ -647,7 +647,7 @@
       Args: text (str) - text to check.
             first_text (str) - first text to toggle between
             second_text (str) - second text to toggle between
-      Return: switched dom element (obj)
+      Return: text (str) - changed text
       */
       text.includes(first_text) ?
         text = text.replace(first_text, second_text) :
@@ -961,7 +961,7 @@
 
     function show_sidebar(feature) {
       /*
-      Show's the sidebar and the info in it for the currently selected feature/marker.
+      Shows the sidebar and the info in it for the currently selected feature/marker.
       Args: feature (obj) - the feature obj for the project to display info for w/ a properties obj
       Return: na
       */
@@ -981,6 +981,32 @@
       sidebar_info.append(active_template);
       // match border color with legend/icon colors for phases
       sidebar_content.style.borderColor = data.phases[feature.properties['Phase']];
+
+      // maximize sidebar content if minimized
+      if (state.sidebar_min) {
+        toggle_sidebar_minimize({
+          sidebar_content: sidebar_content,
+          min_btn: min_btn
+        }, state, CONSTANTS);
+      }
+    }
+
+    function toggle_sidebar_minimize(elements, state, CONSTANTS) {
+      /*
+      Toggles the sidebar minimized state animation and button
+      content change.
+      Args: elements (obj) - contains sidebar_content dom node and the min_btn dom node for the minimize button
+            state (obj) - state for the app
+            CONSTANTS (obj) - constants for the app
+      */
+      const {sidebar_content, min_btn} = elements;
+
+      // minimize the sidebar content
+      sidebar_content.classList.toggle(CONSTANTS.css.minimized);
+      // change the minimize btn icon to reflect toggling action
+      min_btn.textContent = toggle_text(min_btn.textContent, CONSTANTS.min_icon, CONSTANTS.max_icon)
+
+      state.sidebar_min = !state.sidebar_min;
     }
 
     function show_view(view_type) {
@@ -1355,18 +1381,25 @@
         // remove current popup element after animation ends
         animate_popup_removal(state.popups[0].getElement());
 
+        // maximize sidebar content if minimized
+        if (state.sidebar_min) {
+          toggle_sidebar_minimize({
+            sidebar_content: sidebar_content,
+            min_btn: min_btn
+          }, state, CONSTANTS);
+        }
+
         // hide the active marker overlay
         state.active_marker.remove();
       });
 
       min_btn.addEventListener('click', () => {
 
-        // minimize the sidebar content
-        sidebar_content.classList.toggle(CONSTANTS.css.minimized);
-        // change the minimize btn icon to reflect toggling action
-        min_btn.textContent = toggle_text(min_btn.textContent, CONSTANTS.min_icon, CONSTANTS.max_icon)
+        toggle_sidebar_minimize({
+          sidebar_content: sidebar_content,
+          min_btn: min_btn
+        }, state, CONSTANTS);
 
-        state.sidebar_min = !state.sidebar_min;
       });
 
       sidebar_info.addEventListener('click', (e) => {
