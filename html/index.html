@@ -670,6 +670,15 @@
               input.toLowerCase() !== 'n/a')
     }
 
+    function log_error_properties() {
+      /*
+      If a marker is missing a property key that a Marker should have, this'll log to the console for easy fixing layer on.
+      Args:
+      Return:
+      */
+
+    }
+
     function getUniqueFeatures(array, comparatorProperty) {
       // Because features come from tiled vector data, feature geometries may be split
       // or duplicated across tile boundaries and, as a result, features may appear
@@ -691,6 +700,7 @@
       /*
       Gets a LngLatBounds obj that will encompass all the features in a source
       layer. Source layers contain all features, even outside of the map viewport.
+      Function is dependent on source compositing being turned on in Mapbox.
       Args: source_layer_id (str) - the id of the source layer to get features from
             feature_key (str) - the unique key to use in filtering duplicates
       Return: layer_bounds (obj) - a LngLatBounds obj containing 2 coordinates for (var i = 0; i < the sw and ne corners of bounds that will fit all the featuresngth; i++) {
@@ -699,12 +709,13 @@
       */
       const layer_bounds = new mapboxgl.LngLatBounds();
       // gets the source info for all features, even outside of current viewport
-      // verify sourcelayer name from: map.getSource('composite').vectorLayerIds
       const all_features = map.querySourceFeatures('composite', {
         'sourceLayer': source_layer_id
       });
       // filter any duplicates in case of features on tile boundaries
       const unique_features = getUniqueFeatures(all_features, feature_key);
+
+      console.log(all_features);
 
       unique_features.forEach((current_feature) => {
         layer_bounds.extend(current_feature.geometry.coordinates);
@@ -1156,8 +1167,8 @@
       active_marker: null
     }
     const CONSTANTS = {
-      mapbox_key: 'pk.eyJ1Ijoic3VubnltdWkiLCJhIjoiY2sxcjhpMzY0MDJubTNtbzdic2pmZ29kYiJ9.i5wxeYoDcJponU7Pc3b-FQ',
-      mapbox_style_url: 'mapbox://styles/sunnymui/ck1r9coyy0dxn1cpe1tgues9x',
+      mapbox_key: 'PUT KEY FROM KEYS FILE HERE',
+      mapbox_style_url: 'mapbox://styles/catalyzesv/ck85b2nvx09ba1ipcl1itwh9r',
       css: {
         map: 'map',
         hidden: 'hidden',
@@ -1219,6 +1230,15 @@
           name: 'Map View',
           id: 'map'
       }]
+    }
+
+    const templates = {
+      sidebar: {
+        catalyze_letter: {
+          valid: ``,
+          invalid: ``
+        }
+      }
     }
 
     // dom elements references

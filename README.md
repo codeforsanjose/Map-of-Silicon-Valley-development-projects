@@ -40,6 +40,28 @@ App styling/CSS is contained within the 2nd pair of style tags in the `<head>`.
 
 App logic/JS is contained within the `<script>` tags at the end of the `<body`.
 
+### Migration Notes
+
+**IMPORTANT: Make sure you have source compositing turned on in your Style.**
+
+If Source compositing is not turned on, it will break the map. Turn it on by opening your style in Mapbox Studio, clicking on Settings in the top right, then scrolling down to the bottom where it says Source compositing. This feature compresses all the map layers together, increasing speed, but this app assumes we're accessing layers through the composite.
+
+When switching data and style to another Mapbox account, you will need to make 2 changes in the `index.html` file.
+
+In the `CONSTANTS` object, about 3/4 of the way down the file, you'll need to switch 2 values: `mapbox_key` and `mapbox_style_url`. It'll look something like this:
+
+```
+const CONSTANTS = {
+      mapbox_key: 'pk.wieen2m0j1jz20gtia.qbvc4ri1oura82oyfzkyrdymnxgdy0dfojmaeszixgzjenyoymt5wm2iig6iejgn2eb2ixd',
+      mapbox_style_url: 'mapbox://styles/ACCOUNTNAME/ckhdasjoiio12312938ajs923udjeq',
+      ... // etc more stuff
+```
+
+`mapbox_key`: Get the public token from either the Mapbox.com account page or in Mapbox Studio with the style for the map open, click on the **Share** button and look for the field that says `Access Token`. Copy that token and replace the `mapbox_key` value in the `CONSTANTS` object.
+`mapbox_style_url`: Get the style url from either the Mapbox Studio Styles page showing all the saved styles or with when you have the style open in Mapbox Studio. On the Styles page, you can just click the share button or the 3 dot button to view the Style Url. When you have the style actually open, you just click on the **Share** button in the top right and look for the field that says `Style URL`. Copy that url and replace the value of `mapbox_style_url` in the `CONSTANTS` object.
+
+### Tech Notes
+
 The intended use case is within an iframe element due to limitations on the Wix platform. One of the main project requirements was the ability to integrate the app code onto Wix as the client uses it to make it easy for non-technical people to maintain their website. Wix does not allow direct access to the DOM, so raw markup and scripts must be run in an iframe element for sandboxing. Thus, the code assumes no access to a backend or even the page it is being rendered on.
 
 This requires loading all external libraries and resources from CDNs. You'll notice most of it comes from cdnjs.
