@@ -790,11 +790,16 @@
              "Current Status With City" : phase_detail,
              "Catalyze SV's Scorecard" : score,
              "Catalyze SV's Letter" : catalyze_letter,
+             "Catalyze SV's Initial Letter" : catalyze_initial_letter,
+             "Community Partners" : partners,
            } = marker_properties;
 
       // show/hide some info dependent on if it is available in dataset
       const catalyze_letter_html = is_valid(catalyze_letter)
           ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
+          : '';
+      const catalyze_initial_letter_html = is_valid(catalyze_initial_letter)
+          ? `<a href=${catalyze_initial_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Initial Letter</a>`
           : '';
       const catalyze_scorecard_html = is_valid(score)
           ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">See Catalyze SV Scorecard</a>`
@@ -814,6 +819,9 @@
       const city_docs_html = is_valid(city_docs)
           ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
           : '';
+      const partners_html = is_valid(partners)
+            ? `<a href=${partners} class="action-btn" target="_blank" rel="noreferrer">Community Partners</a>`
+            : '';
       const phase_color = data.phases[Phase];
       const tooltip = CONSTANTS.status_tip
 
@@ -847,13 +855,15 @@
         <h3>Resources & Links</h4>
         ${catalyze_status_html}
         <p>
-          Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
+          Catalyze SV evaluates project sustainability, equity, and vibrancy. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
         </p>
         <p>
           ${catalyze_scorecard_html}
           ${catalyze_letter_html}
+          ${catalyze_initial_letter_html}
           ${city_docs_html}
           ${website_html}
+          ${partners_html}
         </p>`
     }
 
@@ -880,31 +890,38 @@
              "Current Status With City" : phase_detail,
              "Community Workshop Recap" : recap,
              "Video Link" : video,
+             "Video Link 2" : video2,
              "Next Public Meeting": next_meet,
              "Community Partners" : partners,
            } = marker_properties;
 
            // show/hide some info dependent on if it is available in dataset
-           const catalyze_letter_html = is_valid(catalyze_letter)
-               ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
+           const video_html = is_valid(video)
+               ? `<a href=${video} class="action-btn" target="_blank" rel="noreferrer">Watch Video</a>`
                : '';
-           const catalyze_scorecard_html = is_valid(score)
-               ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">See Catalyze SV Scorecard</a>`
+           const video_2_html = is_valid(video2)
+               ? `<a href=${video2} class="action-btn" target="_blank" rel="noreferrer">Watch Additional Video</a>`
+               : '';
+           const recap_html = is_valid(recap)
+               ? `<a href=${recap} class="action-btn" target="_blank" rel="noreferrer">Read Workshop Recap</a>`
                : '';
            const website_html = is_valid(website)
                ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
                : '';
-           const presented_date_html = is_valid(presented_date)
-               ? `<li><label>Presented to PAC on:</label> ${presented_date}</li>`
+           const meeting_date_html = is_valid(meet_date)
+               ? `<li><label>Community Meeting Date:</label> ${meet_date}</li>`
                : '';
-           const catalyze_status_html = is_valid(catalyze_status)
-               ? `<p><label>Catalyze SV Review Status:</label> ${catalyze_status}</p>`
+           const meeting_type_html = is_valid(meeting_type)
+               ? `<p><label>Community Meeting Type:</label> ${meeting_type}</p>`
                : '';
            const next_meet_html = is_valid(next_meet)
                ? `<li><label>Next Public Meeting:</label> ${next_meet}</li>`
                : `<li><label>Next Public Meeting:</label> TBD</li>`;
            const city_docs_html = is_valid(city_docs)
                ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
+               : '';
+           const partners_html = is_valid(partners)
+               ? `<a href=${partners} class="action-btn" target="_blank" rel="noreferrer">Community Partners</a>`
                : '';
            const phase_color = data.phases[Phase];
            const tooltip = CONSTANTS.status_tip
@@ -932,20 +949,24 @@
                <li>
                  <label>Owner/Developer:</label> ${developer}
                </li>
-               ${presented_date_html}
+               ${meeting_date_html}
                ${next_meet_html}
              </ul>
              <hr />
              <h3>Resources & Links</h4>
-             ${catalyze_status_html}
+             ${meeting_type_html}
              <p>
-               Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
+              Catalyze SV works with cities and developers to enhance the community engagement process. <a href=" https://www.catalyzesv.org/communityengagement">Learn about our community engagement work.</a>
              </p>
              <p>
                ${catalyze_scorecard_html}
                ${catalyze_letter_html}
                ${city_docs_html}
                ${website_html}
+               ${partners_html}
+               ${video_html}
+               ${video2_html}
+               ${recap_html}
              </p>`
     }
 
