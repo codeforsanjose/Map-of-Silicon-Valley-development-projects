@@ -332,11 +332,11 @@
 
   .legend {
     position: absolute;
-    right: 1em;
-    bottom: 1em;
+    right: 0.5em;
+    bottom: 0.5em;
     background: #ffffffad;
     z-index: 2;
-    padding: 1em;
+    padding: 0.75rem 1em;
     transition: opacity 0.2s ease-in-out;
     box-shadow: 1px 1px 3px #00000069;
   }
@@ -359,6 +359,26 @@
     margin: 0 0 0.5em;
     font-style: italic;
     font-weight: normal;
+  }
+
+  .legend .legend-icon {
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    display: grid;
+    font-weight: bold;
+  }
+
+  .legend .legend-last-row {
+    margin-bottom: 0.5rem;
+  }
+
+  .legend .icon-marker {
+    background: url("data:image/svg+xml,%3Csvg id='Layer_1' data-name='Layer 1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 23.8 29.8'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:none;stroke:%23555;stroke-linecap:round;stroke-miterlimit:10;stroke-width:2px;%7D%3C/style%3E%3C/defs%3E%3Cpath class='cls-1' d='M5.1,15.4a10,10,0,0,1-1-4.2C4.2,5.7,9.1,1.1,15,1.1S25.9,5.7,25.9,11.2a10,10,0,0,1-1,4.2' transform='translate(-3.1 -0.1)'/%3E%3Cline class='cls-1' x1='12' y1='28.8' x2='12' y2='28.8'/%3E%3Cpath class='cls-1' d='M5.1,15.4C7,19.5,13.4,25.9,15,28.9' transform='translate(-3.1 -0.1)'/%3E%3Cpath class='cls-1' d='M24.9,15.4C23,19.5,16.6,25.9,15,28.9h0' transform='translate(-3.1 -0.1)'/%3E%3C/svg%3E") no-repeat  center/contain;
+  }
+
+  .legend .icon-star {
+    background: url("data:image/svg+xml,%3Csvg id='Layer_1' data-name='Layer 1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30.06 28.58'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:none;stroke:%23555655;stroke-miterlimit:10;stroke-width:2px;%7D%3C/style%3E%3C/defs%3E%3Cpolygon class='cls-1' points='15.03 2.26 19.01 10.32 27.91 11.62 21.47 17.89 22.99 26.76 15.03 22.57 7.07 26.76 8.59 17.89 2.15 11.62 11.05 10.32 15.03 2.26'/%3E%3C/svg%3E") no-repeat  center/contain;
   }
 
   /* Branding Attribution */
@@ -400,6 +420,10 @@
   }
 
   .list-content li {
+    display: grid;
+    justify-content: left;
+    align-items: center;
+    grid-auto-flow: column;
     background: #fff;
     padding: 1em;
     border-bottom: 1px solid #ccc;
@@ -415,11 +439,26 @@
     background: #ddd;
   }
 
+  .ListItemTag {
+    display: inline-grid;
+    width: fit-content;
+    margin-right: 1rem;
+  }
+
+  .list-item-type {
+    text-transform: uppercase;
+    font-size: small;
+    text-align: center;
+    font-weight: bold;
+    background: #000000;
+    line-height: 1.9;
+    color: #eee;
+  }
+
   .list-content .status {
     background: #000;
     padding: 0.3em 0.7em;
     color: #fff;
-    margin-right: 1em;
   }
 
   .list-content .title {
@@ -665,7 +704,7 @@
         undefined, null, '', false, depending on the value inputted
       */
       // check that input is defined
-      return (input &&
+      return !!(input &&
               // check if na
               input.toLowerCase() !== 'n/a')
     }
@@ -737,6 +776,57 @@
       return btn;
     }
 
+    function LegendIcon(type = '') {
+      /*
+      Creates a dom element for an icon in the legend
+      Args: type (string) - what type of icon to display
+      Return: span dom element for the icon (obj)
+      */
+
+      const list_item = document.createElement('li');
+      list_item.classList.add('legend-icon');
+
+      // create the legend title
+      const icon = document.createElement('span');
+      switch(type) {
+        case 'marker':
+          icon.classList.add('icon-marker');
+          list_item.textContent = 'Project';
+          break;
+        case 'star':
+          icon.classList.add('icon-star');
+          list_item.textContent = 'Workshop';
+          break;
+        default: 
+          console.log('No icon set for that type', type);
+          return null
+      }
+
+      list_item.prepend(icon);
+
+      return list_item
+    }
+
+    function LegendTitle(text = '', name = '') {
+      /*
+      Creates a heading dom element for the map legend / key
+      Args: text (string) - text to display in the heading element
+            name (string) - class name to add to the elements class list
+      Return: heading h4 dom element with title (obj)
+      */
+
+      const list_item = document.createElement('li');
+      // create the legend title
+      const title = document.createElement('h4');
+      title.classList.add('legend-title');
+      title.classList.add(name);
+      title.textContent = text;
+
+      list_item.append(title)
+
+      return list_item
+    }
+
     function generate_legend(phases, order) {
       /*
       Creates and populates the dom elements for the map legend / key
@@ -746,11 +836,16 @@
       */
       const legend_list = document.createElement('ul');
 
+      const marker_icon = LegendIcon('marker');
+      const workshop_icon = LegendIcon('star');
+      workshop_icon.classList.add('legend-last-row');
+
+      legend_list.append(marker_icon, workshop_icon);
+
       // create the legend title
-      const title = document.createElement('h4');
-      title.classList.add('legend-title');
-      title.textContent = 'Status With City';
-      legend_list.append(title);
+      const city_status_title = LegendTitle('Status With City', 'city-status');
+
+      legend_list.append(city_status_title);
 
       order.forEach((current_item) => {
         // create labels and key colors per legend item
@@ -767,7 +862,7 @@
       return legend_list
     }
 
-    function ProjectInfo() {
+    function ProjectInfo(marker_properties = {}) {
       /*
       Creates the sidebar info element dom contents for a project item.
       Args: marker_properties (obj) - contains the properties for a given marker
@@ -924,7 +1019,8 @@
                ? `<a href=${partners} class="action-btn" target="_blank" rel="noreferrer">Community Partners</a>`
                : '';
            const phase_color = data.phases[Phase];
-           const tooltip = CONSTANTS.status_tip
+           const tooltip = CONSTANTS.status_tip;
+           const project_type_content = project_type ? project_type : "";
 
            // template for the sidebar content
            return `
@@ -943,7 +1039,7 @@
              </p>
              <button class="locate">&#9733; Center on Map</button>
              <p>
-               ${project_type}
+               ${project_type_content}
              </p>
              <ul>
                <li>
@@ -959,105 +1055,72 @@
               Catalyze SV works with cities and developers to enhance the community engagement process. <a href=" https://www.catalyzesv.org/communityengagement">Learn about our community engagement work.</a>
              </p>
              <p>
-               ${catalyze_scorecard_html}
-               ${catalyze_letter_html}
                ${city_docs_html}
                ${website_html}
                ${partners_html}
                ${video_html}
-               ${video2_html}
+               ${video_2_html}
                ${recap_html}
              </p>`
     }
 
-    function generate_sidebar(marker_properties = {}) {
+    function generate_sidebar(marker_properties = {}, layer_type ='') {
       /*
       Creates the sidebar info element dom contents for a project item.
       Args: marker_properties (obj) - contains the properties for a given marker
             feature_type (str) - if its a project or workshop so we use different templates
       Return: template string literal (str) - html string to set the info template element to
       */
-      let { Address,
-             City,
-             State,
-             Phase,
-             "Project Name" : project_name,
-             "ZIP Code": Zip,
-             "Type of Project/ Overview" : project_type,
-             "Link to City Documents" : city_docs,
-             "Date Presented to PAC" : presented_date,
-             "Current Status in Catalyze SV" : catalyze_status,
-             "Next Public Meeting" : next_meet,
-             "Project Website" : website,
-             "Owner/Developer Name" : developer,
-             "Current Status With City" : phase_detail,
-             "Catalyze SV's Scorecard" : score,
-             "Catalyze SV's Letter" : catalyze_letter,
-           } = marker_properties;
+      switch (layer_type) {
+        case CONSTANTS.layers.projects:
+          return ProjectInfo(marker_properties)
+        case CONSTANTS.layers.workshops:
+          return WorkshopInfo(marker_properties)
+        default:
+          console.log('No template to use for this layer type', layer_type);
+      }
 
-      // show/hide some info dependent on if it is available in dataset
-      const catalyze_letter_html = is_valid(catalyze_letter)
-          ? `<a href=${catalyze_letter} class="action-btn" target="_blank" rel="noreferrer">Read Catalyze SV's Letter</a>`
-          : '';
-      const catalyze_scorecard_html = is_valid(score)
-          ? `<a href=${score} class="action-btn" target="_blank" rel="noreferrer">See Catalyze SV Scorecard</a>`
-          : '';
-      const website_html = is_valid(website)
-          ? `<a href=${website} class="action-btn" target="_blank" rel="noreferrer">View Project Website</a>`
-          : '';
-      const presented_date_html = is_valid(presented_date)
-          ? `<li><label>Presented to PAC on:</label> ${presented_date}</li>`
-          : '';
-      const catalyze_status_html = is_valid(catalyze_status)
-          ? `<p><label>Catalyze SV Review Status:</label> ${catalyze_status}</p>`
-          : '';
-      const next_meet_html = is_valid(next_meet)
-          ? `<li><label>Next Public Meeting:</label> ${next_meet}</li>`
-          : `<li><label>Next Public Meeting:</label> TBD</li>`;
-      const city_docs_html = is_valid(city_docs)
-          ? `<a href=${city_docs} class="action-btn" target="_blank" rel="noreferrer">View City Documents</a>`
-          : '';
-      const phase_color = data.phases[Phase];
-      const tooltip = CONSTANTS.status_tip
+    }
 
-      // template for the sidebar content
-      return `
-        <h2 class="title">${project_name}</h3>
-        <p class="status">
-          <span>
-            <span class="status-tag" style="background:${phase_color}">${Phase}</span>
-          </span>
-          <span class="status-detail">${phase_detail}</span>
-          <span>
-            <a href="#" class="status-explain" tooltip="${tooltip}">What's This?</a>
-          </span>
-        </p>
-        <p class="address">
-          ${Address}, ${City}, ${State} ${Zip}
-        </p>
-        <button class="locate">&#9733; Center on Map</button>
-        <p>
-          ${project_type}
-        </p>
-        <ul>
-          <li>
-            <label>Owner/Developer:</label> ${developer}
-          </li>
-          ${presented_date_html}
-          ${next_meet_html}
-        </ul>
-        <hr />
-        <h3>Resources & Links</h4>
-        ${catalyze_status_html}
-        <p>
-          Catalyze SV evaluates project sustainability, equitability, and vibrance. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
-        </p>
-        <p>
-          ${catalyze_scorecard_html}
-          ${catalyze_letter_html}
-          ${city_docs_html}
-          ${website_html}
-        </p>`
+    function ListItemTag(item = {}, phases = {}) {
+      /*
+      Component to create tag/badge part of a list item in the list view, the left most
+      part that shows the status.
+      Args: item (obj) - the feature information for the current item
+            phases (obj) - table of the phases and their colors
+      Return: list item tag (obj) - dom element containing the list item tag
+      */
+      const { 
+        layer : { id = '' }, 
+        properties : { Phase = '' },
+      } = item;
+
+      const tag_container = document.createElement('span');
+      tag_container.classList.add('ListItemTag');
+      // shows the high level what type of item it is i.e project or workshop
+      const item_type = document.createElement('span');
+      item_type.classList.add('list-item-type');
+      // show certain titles for each layer type
+      switch (id) {
+        case CONSTANTS.layers.projects:
+          item_type.textContent = 'Project';
+          break;
+        case CONSTANTS.layers.workshops:
+          item_type.textContent = 'Workshop';
+          break;
+        default:
+          console.log('No text content defined for that layer id', id)
+      }
+
+      const status_tag = document.createElement('span');
+      status_tag.textContent = Phase;
+      status_tag.classList.add('status');
+      // recolor according to phase
+      status_tag.style.backgroundColor = phases[Phase];
+
+      tag_container.append(item_type, status_tag);
+
+      return tag_container
     }
 
     function generate_list_view(map_features, phases) {
@@ -1072,28 +1135,29 @@
       list.classList.add('list-content');
 
       map_features.forEach((current_item, i) => {
-        let current_props = current_item.properties;
+        const current_props = current_item.properties;
+        const { layer : { id } } = current_item;
+        const { Phase, Address, "Project Name" : project_name } = current_props;
+        const isProject = id === CONSTANTS.layers.projects;
+        const isWorkshop = id === CONSTANTS.layers.workshops;
+
         let current_feature = document.createElement('li');
-        // store the name to know which makrer's info to retrieve
-        current_feature.setAttribute('data-name', current_props["Project Name"]);
+        // store the name to know which marker's info to retrieve
+        current_feature.setAttribute('data-name', project_name);
         current_feature.setAttribute('data-index', i);
 
-        let status_tag = document.createElement('span');
-        status_tag.textContent = current_props["Phase"];
-        status_tag.classList.add('status');
-        // recolor according to phase
-        status_tag.style.backgroundColor = phases[current_props['Phase']];
+        const list_item_tag = ListItemTag(current_item, phases);
 
         let title = document.createElement('h3');
-        title.textContent = current_props["Project Name"];
+        title.textContent = project_name;
         title.classList.add('title');
 
         let address = document.createElement('p');
-        address.textContent = current_props["Address"];
+        address.textContent = Address;
         address.classList.add('address');
-        current_feature.append(status_tag, title, address);
+        current_feature.append(list_item_tag, title, address);
 
-        state.listings[current_props['Project Name']] = current_feature;
+        state.listings[project_name] = current_feature;
 
         list.append(current_feature)
       });
@@ -1178,6 +1242,8 @@
       Args: feature (obj) - the feature obj for the project to display info for w/ a properties obj
       Return: na
       */
+      const { layer:{ id } } = feature;
+
       // clear existing content by looping through sidebar info children
       while (sidebar_info.firstChild) {
           sidebar_info.firstChild.remove();
@@ -1188,7 +1254,7 @@
 
       // sidebar elements container that can be innerHTML'ed
       const info_template = document.createElement('template');
-      info_template.innerHTML = generate_sidebar(feature.properties);
+      info_template.innerHTML = generate_sidebar(feature.properties, id);
       // makes the template element active so its visible in the dom
       const active_template = info_template.content.cloneNode(true);
       sidebar_info.append(active_template);
@@ -1318,8 +1384,15 @@
             state (obj) - the state object
       return: na
       */
+      const { layer : {id} } = feature;
+      const isWorkshop = id === CONSTANTS.layers.workshops;
       const popup = make_name_popup(feature).addTo(map);
       state.popups.push(popup);
+      if (isWorkshop) {
+        state.active_marker.setOffset(CONSTANTS.offsets.marker_workshop);
+      } else {
+        state.active_marker.setOffset(CONSTANTS.offsets.marker);
+      }
       // show active marker overlaid current feature
       state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
     }
@@ -1337,7 +1410,7 @@
     function deactivate(state) {
       /*
       Removes active styles and elements for a feature.
-      Args:
+      Args: state (obj)
       Return:
       */
       // Change it back to a cursor when it leaves
@@ -1351,6 +1424,33 @@
 
         // map.off('mouseleave', deactivate);
       }
+    }
+
+    function moveToFeatureByName(name, features) {
+      /*
+      Moves the map to a certain features location on the specified layer with
+      the feature having the matching project name. Zooms on that feature.
+      Args: name (str) - the Project Name matching the mapbox dataset of the specified feature (case insensitive)
+            features (arr) - array of feature objects to find the matching element in
+      Return: na
+      */
+      const theFeaturetoShow = (current) => {
+        const {
+          properties : { 'Project Name' : feature_name = '' },
+          geometry : { coordinates },
+        } = current;
+
+        // lowercase names to make match case insensitive
+        const formatted_name = name.toLowerCase();
+        const formatted_feature_name = feature_name.toLowerCase();
+        return formatted_name === formatted_feature_name
+      }
+      const featureToMoveTo = features.find(theFeaturetoShow);
+
+      map.jumpTo({
+        center: featureToMoveTo.geometry.coordinates,
+        zoom: 13
+      })
     }
 
     // =============== APP LOGIC ===============
@@ -1389,7 +1489,8 @@
       },
       offsets: {
         popup: [0,-15],
-        marker: [0,-14]
+        marker: [0,-14],
+        marker_workshop: [0, 0],
       },
       layers: {
         projects: 'projects-catalyze-sv',
@@ -1402,6 +1503,7 @@
       marker_size: '18px',
       marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
       projects_id_key: 'Project Name',
+      workshops_id_key: 'Project Name',
       status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)',
       catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png',
       max_icon: '+',
@@ -1542,11 +1644,12 @@
         if(!data.features.length) {
           // grab the features on the projects layer
           const rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.layers.projects]});
-          const all_rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.layers.workshops]});
-          console.log(all_rendered_features);
-          console.log(rendered_features);
+          const workshop_rendered_features = map.queryRenderedFeatures({layers: [CONSTANTS.layers.workshops]});
           // filter duplicates by name, save features in original format for later use
-          data.features = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
+          const uniqueProjects = getUniqueFeatures(rendered_features, CONSTANTS.projects_id_key);
+          const uniqueWorkshops = getUniqueFeatures(workshop_rendered_features, CONSTANTS.workshops_id_key);
+          const allUniqueFeatures = [...uniqueProjects, ...uniqueWorkshops];
+          data.features = allUniqueFeatures;
           // create map of features by project name
           data.features_map = data.features.reduce((map, current_item) => {
             map[current_item.properties[CONSTANTS.projects_id_key]] = current_item;
@@ -1590,7 +1693,18 @@
       });
 
       // add an event handler for clicks on workshops
+      map.on('click', CONSTANTS.layers.workshops, (e) => {
 
+        const current_workshop = e.features[0];
+        const current_workshop_name = current_workshop.properties[CONSTANTS.projects_id_key];
+
+        activate_feature({
+          feature: current_workshop,
+          listing: state.listings[current_workshop_name]
+        }, state);
+      });      
+
+      // handle clicks on dev zone areas
       map.on('click', CONSTANTS.layers.dev_zones, (e) => {
         const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
 
@@ -1650,6 +1764,8 @@
         }
       });
 
+      // hover styles for markers
+
       map.on('mouseenter', CONSTANTS.layers.projects, function (e) {
         // Change the cursor to a pointer when the mouse is over the projects layer
         map.getCanvas().style.cursor = 'pointer';
@@ -1661,6 +1777,18 @@
       });
 
       map.on('mouseleave', CONSTANTS.layers.projects, deactivate.bind(this, state));
+
+      map.on('mouseenter', CONSTANTS.layers.workshops, function (e) {
+        // Change the cursor to a pointer when the mouse is over the projects layer
+        map.getCanvas().style.cursor = 'pointer';
+
+        // don't want mouseovers to change the opened popup when sidebar is open
+        if (!state.sidebar_open) {
+          hoverize_feature(e.features[0], state);
+        }
+      });
+
+      map.on('mouseleave', CONSTANTS.layers.workshops, deactivate.bind(this, state));
 
       map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
         const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
@@ -1677,6 +1805,16 @@
 
       map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
 
+      // move to a specified set point if specified here logic
+      const project_features = map.querySourceFeatures('composite', {
+        'sourceLayer': CONSTANTS.layers.projects_source
+      });
+      const workshop_features = map.querySourceFeatures('composite', {
+        'sourceLayer': CONSTANTS.layers.workshops_source
+      });
+      const all_source_features = [...project_features, ...workshop_features];
+
+      // moveToFeatureByName('2232 El Camino Real', all_source_features);
     });
 
   </script>
