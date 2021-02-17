@@ -677,6 +677,143 @@
   </script>
 
   <script>
+    //
+    // CONSTANTS & STATE
+    //
+    const state = {
+      sidebar_open: false,
+      sidebar_min: false,
+      tabs: {},
+      popups: [],
+      listings: {},
+      active_tab: null,
+      active_project: null,
+      active_view: null,
+      active_marker: null,
+      preset_marker_name: '', 
+    }
+    const CONSTANTS = {
+      authorized_parent_domain: 'https://www.catalyzesv.org',
+      mapbox_key: 'pk.eyJ1IjoiY2F0YWx5emVzdiIsImEiOiJjazZ4d2RoN2gwa2QyM2tydnF6dG1zbjNrIn0.erXugBYot80KgmE2egMXCA',
+      mapbox_style_url: 'mapbox://styles/catalyzesv/ck85b2nvx09ba1ipcl1itwh9r',
+      css: {
+        map: 'map',
+        hidden: 'hidden',
+        transparent: 'transparent',
+        fade: 'fade-in',
+        fade_out: 'fade-out',
+        fade_out_slow: 'fade-out-slow',
+        slide_top: 'slide-out-top',
+        slide_bottom: 'slide-out-bottom',
+        darken: 'darken',
+        active: 'active',
+        list: 'list',
+        locate_btn: 'locate',
+        marker: 'marker',
+        minimized: 'minimized'
+      },
+      offsets: {
+        popup: [0,-15],
+        marker: [0,-14],
+        marker_workshop: [0, 0],
+      },
+      layers: {
+        projects: 'projects-catalyze-sv',
+        projects_source: 'Projects_Catalyze_SV',
+        dev_zones: 'dev-zones-catalyze-sv',
+        dev_zones_source: 'Dev_Zones_Catalyze_SV',
+        workshops: 'community-workshops',
+        workshops_source: 'Community_Workshops',
+      },
+      marker_size: '18px',
+      marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
+      projects_id_key: 'Project Name',
+      workshops_id_key: 'Project Name',
+      status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)',
+      catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png',
+      max_icon: '+',
+      min_icon: '-'
+    }
+    const data = {
+      features: [],
+      features_map: {},
+      feature_types: {
+        project: 'project',
+        workshop: 'workshop'
+      },
+      // phase names and their associated colors
+      phases: {
+        'Withdrawn': '#989898',
+        'In Design': '#86619f',
+        'In Review': '#268adb',
+        'Approved': '#358c29',
+        'Construction': '#aa8f00'
+      },
+      // the order to output the legend items in
+      legend_order: [
+        'Withdrawn',
+        'In Design',
+        'In Review',
+        'Approved',
+        'Construction'
+      ],
+      // view types in the view menu
+      view_types: [{
+          name: 'List View',
+          id: 'list'
+        }, {
+          name: 'Map View',
+          id: 'map'
+      }]
+    }
+
+    // dom elements references
+    const map_element = document.querySelector('#map');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebar_content = document.querySelector('.sidebar .content');
+    const sidebar_info = document.querySelector('.info');
+    const close_btn = document.querySelector('.close-btn');
+    const min_btn = document.querySelector('.minimize-btn');
+    const legend = document.querySelector('.legend');
+    const branding = document.querySelector('.branding');
+    const list_view = document.querySelector('.list-view');
+    const view_menu = document.querySelector('.view-menu');
+    const loader = document.querySelector('.loader');
+    const loader_text = document.querySelector('.loader p');
+    const loader_title = document.querySelector('.loader .loader-title');
+
+    //
+    // Utilities
+    //
+
+    function format_to_only_letters_numbers(text = '') {
+      /*
+      Replaces any non-letter or number character like punctuation or spaces
+      in a string with empty.
+      Args: text (str) - the text to reformat
+      Return: reformatted text (str) - the string with all the extra stuff stripped out
+      */
+     const matchingExclusions = /[^A-Za-z0-9]+/gm;
+     return text.replaceAll(matchingExclusions, '');
+    }
+
+    function fuzzy_match_strings(first_text = '', second_text = '') {
+      /*
+      Check whether 2 text strings match, excluding puncutation, white space, and casing.
+      Args: first_text (str) - 1st string to reformat and check
+            second_text (str) - 2nd string to reformat and check
+      Return: boolean - whether the 2 words match
+      */
+      const normalized_first_text = format_to_only_letters_numbers(first_text.toLowerCase());
+      const normalized_second_text = format_to_only_letters_numbers(second_text.toLowerCase());
+
+      return normalized_first_text === normalized_second_text
+    }
+
+    //
+    // APP COMPONENTS & FUNCTIONS
+    // 
+
     function toggle_text(text, first_text, second_text) {
       /*
       Acts as a toggle for textual content in an element by grabbing
@@ -694,6 +831,7 @@
 
       return text
     }
+
     function is_valid(input) {
       /*
       Returns truthy or falsey values based on the validation conditions being met.
@@ -707,15 +845,6 @@
       return !!(input &&
               // check if na
               input.toLowerCase() !== 'n/a')
-    }
-
-    function log_error_properties() {
-      /*
-      If a marker is missing a property key that a Marker should have, this'll log to the console for easy fixing layer on.
-      Args:
-      Return:
-      */
-
     }
 
     function getUniqueFeatures(array, comparatorProperty) {
@@ -1428,8 +1557,8 @@
 
     function moveToFeatureByName(name, features) {
       /*
-      Moves the map to a certain features location on the specified layer with
-      the feature having the matching project name. Zooms on that feature.
+      Moves the map to a specified feature's location on the specified layer by matching 
+      the Project Name passed to the one in the dataset. Zooms on that feature.
       Args: name (str) - the Project Name matching the mapbox dataset of the specified feature (case insensitive)
             features (arr) - array of feature objects to find the matching element in
       Return: na
@@ -1440,12 +1569,15 @@
           geometry : { coordinates },
         } = current;
 
-        // lowercase names to make match case insensitive
-        const formatted_name = name.toLowerCase();
-        const formatted_feature_name = feature_name.toLowerCase();
-        return formatted_name === formatted_feature_name
+        // match the name and feature name ignoring case, spacing, and punctuation
+        return fuzzy_match_strings(name, feature_name)
       }
       const featureToMoveTo = features.find(theFeaturetoShow);
+
+      // if no match, don't do anything
+      if (!Object.keys(featureToMoveTo).length) {
+        return
+      }
 
       map.jumpTo({
         center: featureToMoveTo.geometry.coordinates,
@@ -1455,117 +1587,6 @@
 
     // =============== APP LOGIC ===============
 
-    const state = {
-      sidebar_open: false,
-      sidebar_min: false,
-      // markers_saved: false,
-      tabs: {},
-      popups: [],
-      listings: {},
-      // active_popup: false,
-      active_tab: null,
-      active_project: null,
-      active_view: null,
-      active_marker: null
-    }
-    const CONSTANTS = {
-      mapbox_key: 'pk.eyJ1IjoiY2F0YWx5emVzdiIsImEiOiJjazZ4d2RoN2gwa2QyM2tydnF6dG1zbjNrIn0.erXugBYot80KgmE2egMXCA',
-      mapbox_style_url: 'mapbox://styles/catalyzesv/ck85b2nvx09ba1ipcl1itwh9r',
-      css: {
-        map: 'map',
-        hidden: 'hidden',
-        transparent: 'transparent',
-        fade: 'fade-in',
-        fade_out: 'fade-out',
-        fade_out_slow: 'fade-out-slow',
-        slide_top: 'slide-out-top',
-        slide_bottom: 'slide-out-bottom',
-        darken: 'darken',
-        active: 'active',
-        list: 'list',
-        locate_btn: 'locate',
-        marker: 'marker',
-        minimized: 'minimized'
-      },
-      offsets: {
-        popup: [0,-15],
-        marker: [0,-14],
-        marker_workshop: [0, 0],
-      },
-      layers: {
-        projects: 'projects-catalyze-sv',
-        projects_source: 'Projects_Catalyze_SV',
-        dev_zones: 'dev-zones-catalyze-sv',
-        dev_zones_source: 'Dev_Zones_Catalyze_SV',
-        workshops: 'community-workshops',
-        workshops_source: 'Community_Workshops',
-      },
-      marker_size: '18px',
-      marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
-      projects_id_key: 'Project Name',
-      workshops_id_key: 'Project Name',
-      status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)',
-      catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png',
-      max_icon: '+',
-      min_icon: '-'
-    }
-    const data = {
-      features: [],
-      features_map: {},
-      feature_types: {
-        project: 'project',
-        workshop: 'workshop'
-      },
-      // phase names and their associated colors
-      phases: {
-        'Withdrawn': '#989898',
-        'In Design': '#86619f',
-        'In Review': '#268adb',
-        'Approved': '#358c29',
-        'Construction': '#aa8f00'
-      },
-      // the order to output the legend items in
-      legend_order: [
-        'Withdrawn',
-        'In Design',
-        'In Review',
-        'Approved',
-        'Construction'
-      ],
-      // view types in the view menu
-      view_types: [{
-          name: 'List View',
-          id: 'list'
-        }, {
-          name: 'Map View',
-          id: 'map'
-      }]
-    }
-
-    const templates = {
-      sidebar: {
-        catalyze_letter: {
-          valid: ``,
-          invalid: ``
-        }
-      }
-    }
-
-    // dom elements references
-    const map_element = document.querySelector('#map');
-    const sidebar = document.querySelector('.sidebar');
-    const sidebar_content = document.querySelector('.sidebar .content');
-    const sidebar_info = document.querySelector('.info');
-    const close_btn = document.querySelector('.close-btn');
-    const min_btn = document.querySelector('.minimize-btn');
-    const legend = document.querySelector('.legend');
-    const branding = document.querySelector('.branding');
-    const list_view = document.querySelector('.list-view');
-    const view_menu = document.querySelector('.view-menu');
-    const loader = document.querySelector('.loader');
-    const loader_text = document.querySelector('.loader p');
-    const loader_title = document.querySelector('.loader .loader-title');
-
     // generate the map
     mapboxgl.accessToken = CONSTANTS.mapbox_key;
     const map = new mapboxgl.Map({
@@ -1574,6 +1595,30 @@
       center: [-121.898395, 37.322972],
       zoom: 11,
       logoPosition: 'bottom-right'
+    });
+
+    // signal to the parent window that we're ready to receive messages
+    // if we're an embedded iframe on the specified domain
+
+    document.addEventListener('DOMContentLoaded', (e) => {
+      // if embedded iframe on the authorized parent, send a ready message to the parent
+      if (window.location.origin.includes(CONSTANTS.authorized_parent_domain)) {
+        window.parent.postMessage('ready', CONSTANTS.authorized_parent_domain);
+      }
+    });
+
+    // receive and interpet signals from parent window if need to do stuff for that
+    document.addEventListener('message', (e) => {
+      const { data, origin } = e;
+      // prevent messages from other domains for security
+      if (origin !== CONSTANTS.authorized_parent_domain) {
+        return
+      }
+
+      const parentMsgData = JSON.parse(data);
+      const { presetMarker = '' } = parentMsgData;
+      // save the preset marker name id if it was sent from parent
+      state.preset_marker_name = presetMarker;
     });
 
     // wait for map to finish load before executing map functions
@@ -1705,14 +1750,14 @@
       });      
 
       // handle clicks on dev zone areas
-      map.on('click', CONSTANTS.layers.dev_zones, (e) => {
-        const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
+      // map.on('click', CONSTANTS.layers.dev_zones, (e) => {
+      //   const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
 
-        activate_feature({
-          feature: data.features_map[current_project_name],
-          listing: state.listings[current_project_name]
-        }, state);
-      });
+      //   activate_feature({
+      //     feature: data.features_map[current_project_name],
+      //     listing: state.listings[current_project_name]
+      //   }, state);
+      // });
 
       close_btn.addEventListener('click', () => {
 
@@ -1790,20 +1835,20 @@
 
       map.on('mouseleave', CONSTANTS.layers.workshops, deactivate.bind(this, state));
 
-      map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
-        const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
-        const corresponding_feature = data.features_map[current_project];
+      // map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
+      //   const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
+      //   const corresponding_feature = data.features_map[current_project];
 
-        // Change the cursor to a pointer when the mouse is over the projects layer
-        map.getCanvas().style.cursor = 'pointer';
+      //   // Change the cursor to a pointer when the mouse is over the projects layer
+      //   map.getCanvas().style.cursor = 'pointer';
 
-        // don't want mouseovers to change the opened popup when sidebar is open
-        if (!state.sidebar_open) {
-          hoverize_feature(corresponding_feature, state);
-        }
-      });
+      //   // don't want mouseovers to change the opened popup when sidebar is open
+      //   if (!state.sidebar_open) {
+      //     hoverize_feature(corresponding_feature, state);
+      //   }
+      // });
 
-      map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
+      // map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
 
       // move to a specified set point if specified here logic
       const project_features = map.querySourceFeatures('composite', {
@@ -1814,7 +1859,10 @@
       });
       const all_source_features = [...project_features, ...workshop_features];
 
-      // moveToFeatureByName('2232 El Camino Real', all_source_features);
+      // if preset marker is set, center+zoom the map on that feature
+      if (state.preset_marker_name) {
+        moveToFeatureByName(state.preset_marker_name, all_source_features);
+      }
     });
 
   </script>
