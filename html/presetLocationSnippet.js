@@ -1,7 +1,7 @@
 document.addEventListener('message', (e) => {
     const { data, origin } = e;
     // prevent messages from other domains for security
-    if (origin !== https://www.catalyzesv.org) {
+    if (origin !== "https://www.catalyzesv.org") {
       return
     }
 
