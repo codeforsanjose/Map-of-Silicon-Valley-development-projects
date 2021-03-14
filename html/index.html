@@ -483,6 +483,21 @@
     -webkit-animation: fadeInOut ease 2s infinite;
   }
 
+  /* hover popup */
+
+  .popup-title {
+    margin: 0;
+  }
+
+  .popup-developer-name {
+    margin: 0;
+    font-style: italic;
+  }
+
+  .popup-type {
+    margin: 0;
+  }
+
   /* animation / effects */
 
   .darken {
@@ -692,6 +707,7 @@
       active_marker: null,
       preset_marker_name: '', 
     }
+
     const CONSTANTS = {
       authorized_parent_domain: 'https://www.catalyzesv.org',
       mapbox_key: 'pk.eyJ1IjoiY2F0YWx5emVzdiIsImEiOiJjazZ4d2RoN2gwa2QyM2tydnF6dG1zbjNrIn0.erXugBYot80KgmE2egMXCA',
@@ -1294,6 +1310,36 @@
       return list;
     }
 
+    function Popup(props) {
+      /*
+      Renders the popup html elements for a popup to show.
+      Args: props (obj) - properties needed to render correctly, needs the current project
+      Return: str - html string
+      */
+      const { 
+        current_project: { 
+          properties = {}
+        } 
+      } = props;
+      const {
+        'Project Name': name = '',
+        'Owner/Developer Name': developer = '',
+        'Type of Project/ Overview': type = '',
+      } = properties;
+      
+      return (`
+        <h4 class="popup-title">
+          ${name}
+        </h4>
+        <p class="popup-developer-name">
+          ${developer}
+        </p>
+        <p class="popup-type">
+          ${type}
+        </p>
+      `)
+    }
+
     function make_name_popup(current_project) {
       /*
       Show the given popup on the map using info from a project.
@@ -1310,7 +1356,7 @@
       });
 
       popup.setLngLat(current_project.geometry.coordinates)
-           .setText(current_project.properties['Project Name']);
+        .setHTML(Popup({current_project}))
 
       return popup
     }
@@ -1555,15 +1601,16 @@
       }
     }
 
-    function moveToFeatureByName(name, features) {
+    function getFeatureByProjectName(name = '', features = []) {
       /*
-      Moves the map to a specified feature's location on the specified layer by matching 
-      the Project Name passed to the one in the dataset. Zooms on that feature.
-      Args: name (str) - the Project Name matching the mapbox dataset of the specified feature (case insensitive)
-            features (arr) - array of feature objects to find the matching element in
-      Return: na
+      Given an array of features, find the matching feature with the
+      given project name and return it.
+      Args: name (str) - project name to match features by
+            features (arr) - array of features to search through
+      Return: feature (obj) - the feature item matching the project name
       */
-      const theFeaturetoShow = (current) => {
+
+      const theMatchingFeature = (current) => {
         const {
           properties : { 'Project Name' : feature_name = '' },
           geometry : { coordinates },
@@ -1572,7 +1619,19 @@
         // match the name and feature name ignoring case, spacing, and punctuation
         return fuzzy_match_strings(name, feature_name)
       }
-      const featureToMoveTo = features.find(theFeaturetoShow);
+
+      return features.find(theMatchingFeature);
+    }
+
+    function moveToFeatureByName(name, features) {
+      /*
+      Moves the map to a specified feature's location on the specified layer by matching 
+      the Project Name passed to the one in the dataset. Zooms on that feature.
+      Args: name (str) - the Project Name matching the mapbox dataset of the specified feature (case insensitive)
+            features (arr) - array of feature objects to find the matching element in
+      Return: na
+      */
+      const featureToMoveTo = getFeatureByProjectName(name, features);
 
       // if no match, don't do anything
       if (!Object.keys(featureToMoveTo).length) {
@@ -1624,22 +1683,6 @@
     // wait for map to finish load before executing map functions
     map.on('load', () => {
 
-      // ============ PRELOADER =============
-
-      // animate hiding loader on map load
-      loader.classList.add(CONSTANTS.css.fade_out_slow);
-      loader_title.classList.add(CONSTANTS.css.slide_top);
-      loader_text.classList.add(CONSTANTS.css.slide_bottom);
-
-      // named animationend callback so listener can be deleted to prevent memory leaks
-      const hide_loader = (e) => {
-        loader.removeEventListener('animationend', hide_loader);
-        loader.classList.add(CONSTANTS.css.hidden);
-      };
-
-      // hide loader after css animation completes
-      loader.addEventListener('animationend', hide_loader);
-
       // ========= MAP UI / VIEW CREATION ============
 
       // fit map viewport to all plotted projects
@@ -1685,6 +1728,42 @@
 
       // create the list view
       map.on('idle', () => {
+        // wait for map idle to remove preloader as that is when everything has rendered
+        // and map logic has run, including any lazy loaded in source data chunks
+
+        // ============ PRELOADER =============
+
+        // animate hiding loader on map load
+        loader.classList.add(CONSTANTS.css.fade_out_slow);
+        loader_title.classList.add(CONSTANTS.css.slide_top);
+        loader_text.classList.add(CONSTANTS.css.slide_bottom);
+
+        // named animationend callback so listener can be deleted to prevent memory leaks
+        const hide_loader = (e) => {
+          loader.removeEventListener('animationend', hide_loader);
+          loader.classList.add(CONSTANTS.css.hidden);
+        };
+
+        // hide loader after css animation completes
+        loader.addEventListener('animationend', hide_loader);
+
+      // move to a specified set point if signaled in the state or by postmessage
+      const project_features = map.querySourceFeatures('composite', {
+        'sourceLayer': CONSTANTS.layers.projects_source
+      });
+      const workshop_features = map.querySourceFeatures('composite', {
+        'sourceLayer': CONSTANTS.layers.workshops_source
+      });
+      const all_source_features = [...project_features, ...workshop_features];
+
+      // if preset marker is set, center+zoom the map on that feature
+      if (state.preset_marker_name) {
+        moveToFeatureByName(state.preset_marker_name, all_source_features);
+        const presetFeature = getFeatureByProjectName(state.preset_marker_name, all_source_features);
+        // need to hoverize but clickability might make it confusing?
+        hoverize_feature(presetFeature, state);
+      }
+
         // only need to get the features once
         if(!data.features.length) {
           // grab the features on the projects layer
@@ -1835,6 +1914,8 @@
 
       map.on('mouseleave', CONSTANTS.layers.workshops, deactivate.bind(this, state));
 
+      // deprecate the dev zone interactivity for now
+
       // map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
       //   const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
       //   const corresponding_feature = data.features_map[current_project];
@@ -1850,19 +1931,6 @@
 
       // map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
 
-      // move to a specified set point if specified here logic
-      const project_features = map.querySourceFeatures('composite', {
-        'sourceLayer': CONSTANTS.layers.projects_source
-      });
-      const workshop_features = map.querySourceFeatures('composite', {
-        'sourceLayer': CONSTANTS.layers.workshops_source
-      });
-      const all_source_features = [...project_features, ...workshop_features];
-
-      // if preset marker is set, center+zoom the map on that feature
-      if (state.preset_marker_name) {
-        moveToFeatureByName(state.preset_marker_name, all_source_features);
-      }
     });
 
   </script>
