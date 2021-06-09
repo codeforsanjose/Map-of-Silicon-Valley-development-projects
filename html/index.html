@@ -1661,7 +1661,7 @@
             features (arr) - array of feature objects to find the matching element in
       Return: na
       */
-      const featureToMoveTo = getFeatureByProjectName(name, features);
+      const featureToMoveTo = getFeatureByProjectName(name, features) || {};
 
       // if no match, don't do anything
       if (!Object.keys(featureToMoveTo).length) {
@@ -1672,6 +1672,12 @@
         center: featureToMoveTo.geometry.coordinates,
         zoom: 13
       })
+    }
+
+    function sendMessageToParent(message = "") {
+      CONSTANTS.authorized_parent_domains.forEach((currentDomain) => {
+        window.parent.postMessage(message, currentDomain);
+      });
     }
 
     // =============== APP LOGIC ===============
@@ -1691,10 +1697,7 @@
 
 
     // if embedded iframe on the authorized parent, send a ready message to the parent
-    CONSTANTS.authorized_parent_domains.forEach((currentDomain) => {
-      window.parent.postMessage('ready', currentDomain);
-    });
-
+    sendMessageToParent('ready');
 
     // wait for map to finish load before executing map functions
     map.on('load', () => {
@@ -1791,7 +1794,9 @@
           moveToFeatureByName(state.preset_marker_name, all_source_features);
 
           const presetFeature = getFeatureByProjectName(state.preset_marker_name, data.features);
-          hoverize_feature(presetFeature, state, false);
+          if (presetFeature) {
+            hoverize_feature(presetFeature, state, false);
+          }
         }
       });
 
@@ -1839,18 +1844,17 @@
         //   listing: current_listing
         // }, state);
 
-        window.open(current_page, '_blank');
+        sendMessageToParent(`{OPEN}=${current_page}`);
       });
 
       // When a click event occurs on a marker in the projects layer, show info
       map.on('click', CONSTANTS.layers.projects, (e) => {
 
-
         const current_project = e.features[0];
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
         const current_project_page = current_project.properties[CONSTANTS.webpage_key];
 
-        window.open(current_project_page, '_blank');
+        sendMessageToParent(`{OPEN}=${current_project_page}`);
 
         // activate_feature({
         //   feature: current_project,
@@ -1869,7 +1873,8 @@
         //   feature: current_workshop,
         //   listing: state.listings[current_workshop_name]
         // }, state);
-        window.open(current_workshop_page, '_blank');
+        
+        sendMessageToParent(`{OPEN}=${current_workshop_page}`)
       });      
 
       // handle clicks on dev zone areas
