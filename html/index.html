@@ -483,6 +483,21 @@
     -webkit-animation: fadeInOut ease 2s infinite;
   }
 
+  /* hover popup */
+
+  .popup-title {
+    margin: 0;
+  }
+
+  .popup-developer-name {
+    margin: 0;
+    font-style: italic;
+  }
+
+  .popup-type {
+    margin: 0;
+  }
+
   /* animation / effects */
 
   .darken {
@@ -636,6 +651,25 @@
   }
   </style>
 
+  <script>
+    // place to stash early sent data for use in the app
+    window._publicState = {
+      message: ''
+    }
+    // message listener declared early as possible due to timing of parent message
+    window.onmessage = function(e){
+      const {data = '', origin = ''} = e;
+        // prevent messages from other domains for security
+        // if (!CONSTANTS.authorized_parent_domains.includes(origin)) {
+        //   return
+        // }
+
+        if (data) {        
+            window._publicState.message = data; 
+        }
+    };
+  </script>
+
   <meta name="theme-color" content="#fafafa">
 </head>
 
@@ -692,8 +726,9 @@
       active_marker: null,
       preset_marker_name: '', 
     }
+
     const CONSTANTS = {
-      authorized_parent_domain: 'https://www.catalyzesv.org',
+      authorized_parent_domains: ['https://www.catalyzesv.org', "https://editor.wix.com/"],
       mapbox_key: 'pk.eyJ1IjoiY2F0YWx5emVzdiIsImEiOiJjazZ4d2RoN2gwa2QyM2tydnF6dG1zbjNrIn0.erXugBYot80KgmE2egMXCA',
       mapbox_style_url: 'mapbox://styles/catalyzesv/ck85b2nvx09ba1ipcl1itwh9r',
       css: {
@@ -729,6 +764,7 @@
       marker_svg: "%3Csvg xmlns='http://www.w3.org/2000/svg' width='auto' height='auto' viewBox='0 0 100 100' xml:space='preserve'%3E%3Cpath opacity='0.8' fill='%23fff' d='M91.532,39.844c-0.278-0.804-1.036-1.343-1.888-1.343H61.482l-9.597-27.159c-0.284-0.799-1.039-1.334-1.886-1.334 c-0.846,0-1.602,0.534-1.885,1.334l-9.598,27.159H10.357c-0.851,0-1.609,0.539-1.891,1.343c-0.278,0.804-0.018,1.698,0.651,2.226 l21.986,17.409l-9.84,27.846c-0.281,0.795-0.031,1.682,0.62,2.215c0.654,0.536,1.573,0.603,2.297,0.167l25.818-15.488l25.818,15.488 c0.317,0.191,0.677,0.285,1.032,0.285c0.447,0,0.898-0.152,1.266-0.452c0.651-0.533,0.901-1.42,0.62-2.215l-9.84-27.846 l21.992-17.409C91.553,41.542,91.813,40.648,91.532,39.844z'/%3E%3C/svg%3E",
       projects_id_key: 'Project Name',
       workshops_id_key: 'Project Name',
+      webpage_key: 'Website Page',
       status_tip: 'Projects go through several phases. Developers submit applications to the City, get their design reviewed, do redesigns based on City & community feedback,  resubmit proposals for review, and get approval (though can even redesign after approval)',
       catalyze_logo_img: 'https://static.wixstatic.com/media/f632f7_4b161d28a60f4906aea2a55c528ce323~mv2.png/v1/fill/w_151,h_16/catalyzelogo.png',
       max_icon: '+',
@@ -743,11 +779,12 @@
       },
       // phase names and their associated colors
       phases: {
-        'Withdrawn': '#989898',
-        'In Design': '#86619f',
-        'In Review': '#268adb',
-        'Approved': '#358c29',
-        'Construction': '#aa8f00'
+        'Withdrawn': '#A0A09F', // gray
+        'In Design': '#B6D7A8', // light green
+        'In Review': '#283B62', // navy
+        'Approved': '#38761D', // dark green
+        'Construction': '#FF00FF', // magenta
+        'Completed': '#F0B50C' // gold
       },
       // the order to output the legend items in
       legend_order: [
@@ -755,7 +792,8 @@
         'In Design',
         'In Review',
         'Approved',
-        'Construction'
+        'Construction',
+        'Completed'
       ],
       // view types in the view menu
       view_types: [{
@@ -1294,11 +1332,47 @@
       return list;
     }
 
-    function make_name_popup(current_project) {
+    function Popup(props) {
+      /*
+      Renders the popup html elements for a popup to show.
+      Args: props (obj) - properties needed to render correctly, needs the current project
+      Return: str - html string
+      */
+      const { 
+        current_project: { 
+          properties = {}
+        },
+        show_cta = true,
+      } = props;
+    
+      const {
+        'Project Name': name = '',
+        'Owner/Developer Name': developer = '',
+        'Type of Project/ Overview': type = '',
+      } = properties;
+
+      const call_to_action = show_cta ? '<strong>Click Marker to Open Full Info</strong>' : '';
+      
+      return (`
+        <h4 class="popup-title">
+          ${name}
+        </h4>
+        <p class="popup-developer-name">
+          By ${developer}
+        </p>
+        <p class="popup-type">
+          ${type}
+        </p>
+        ${call_to_action}
+      `)
+    }
+
+    function make_name_popup(current_project, show_cta = true) {
       /*
       Show the given popup on the map using info from a project.
       Args: current_project (obj) - a specific map feature element w/ geometry and properties,
             typically returned from an event listener -> event.features[0]
+            show_cta (bool) - whether to show the cta in the popup
       Return: Popup (obj) - instance containing the coordinates and text for the marker
       */
       // need to instantiate a new Popup otherwise the mousover popups won't
@@ -1310,7 +1384,7 @@
       });
 
       popup.setLngLat(current_project.geometry.coordinates)
-           .setText(current_project.properties['Project Name']);
+        .setHTML(Popup({current_project, show_cta}))
 
       return popup
     }
@@ -1505,18 +1579,22 @@
       state.active_marker.setLngLat(feature.geometry.coordinates).addTo(map);
     }
 
-    function hoverize_feature(feature, state) {
+    function hoverize_feature(feature, state, show_popup = true) {
       /*
       Puts a feature into a hover state ie styles to hint interactivity
       or release information scent.
       Args: feature (obj) - the feature geojson object to hoverize style
             state (obj) - the state object
+            show_popup (bool) - whether to show the poup
       return: na
       */
       const { layer : {id} } = feature;
       const isWorkshop = id === CONSTANTS.layers.workshops;
-      const popup = make_name_popup(feature).addTo(map);
-      state.popups.push(popup);
+      if (show_popup) {
+        const popup = make_name_popup(feature).addTo(map);
+      
+        state.popups.push(popup);
+      }
       if (isWorkshop) {
         state.active_marker.setOffset(CONSTANTS.offsets.marker_workshop);
       } else {
@@ -1555,15 +1633,16 @@
       }
     }
 
-    function moveToFeatureByName(name, features) {
+    function getFeatureByProjectName(name = '', features = []) {
       /*
-      Moves the map to a specified feature's location on the specified layer by matching 
-      the Project Name passed to the one in the dataset. Zooms on that feature.
-      Args: name (str) - the Project Name matching the mapbox dataset of the specified feature (case insensitive)
-            features (arr) - array of feature objects to find the matching element in
-      Return: na
+      Given an array of features, find the matching feature with the
+      given project name and return it.
+      Args: name (str) - project name to match features by
+            features (arr) - array of features to search through
+      Return: feature (obj) - the feature item matching the project name
       */
-      const theFeaturetoShow = (current) => {
+
+      const theMatchingFeature = (current) => {
         const {
           properties : { 'Project Name' : feature_name = '' },
           geometry : { coordinates },
@@ -1572,7 +1651,19 @@
         // match the name and feature name ignoring case, spacing, and punctuation
         return fuzzy_match_strings(name, feature_name)
       }
-      const featureToMoveTo = features.find(theFeaturetoShow);
+
+      return features.find(theMatchingFeature);
+    }
+
+    function moveToFeatureByName(name, features) {
+      /*
+      Moves the map to a specified feature's location on the specified layer by matching 
+      the Project Name passed to the one in the dataset. Zooms on that feature.
+      Args: name (str) - the Project Name matching the mapbox dataset of the specified feature (case insensitive)
+            features (arr) - array of feature objects to find the matching element in
+      Return: na
+      */
+      const featureToMoveTo = getFeatureByProjectName(name, features) || {};
 
       // if no match, don't do anything
       if (!Object.keys(featureToMoveTo).length) {
@@ -1583,6 +1674,12 @@
         center: featureToMoveTo.geometry.coordinates,
         zoom: 13
       })
+    }
+
+    function sendMessageToParent(message = "") {
+      CONSTANTS.authorized_parent_domains.forEach((currentDomain) => {
+        window.parent.postMessage(message, currentDomain);
+      });
     }
 
     // =============== APP LOGIC ===============
@@ -1600,45 +1697,12 @@
     // signal to the parent window that we're ready to receive messages
     // if we're an embedded iframe on the specified domain
 
-    document.addEventListener('DOMContentLoaded', (e) => {
-      // if embedded iframe on the authorized parent, send a ready message to the parent
-      if (window.location.origin.includes(CONSTANTS.authorized_parent_domain)) {
-        window.parent.postMessage('ready', CONSTANTS.authorized_parent_domain);
-      }
-    });
 
-    // receive and interpet signals from parent window if need to do stuff for that
-    document.addEventListener('message', (e) => {
-      const { data, origin } = e;
-      // prevent messages from other domains for security
-      if (origin !== CONSTANTS.authorized_parent_domain) {
-        return
-      }
-
-      const parentMsgData = JSON.parse(data);
-      const { presetMarker = '' } = parentMsgData;
-      // save the preset marker name id if it was sent from parent
-      state.preset_marker_name = presetMarker;
-    });
+    // if embedded iframe on the authorized parent, send a ready message to the parent
+    sendMessageToParent('ready');
 
     // wait for map to finish load before executing map functions
     map.on('load', () => {
-
-      // ============ PRELOADER =============
-
-      // animate hiding loader on map load
-      loader.classList.add(CONSTANTS.css.fade_out_slow);
-      loader_title.classList.add(CONSTANTS.css.slide_top);
-      loader_text.classList.add(CONSTANTS.css.slide_bottom);
-
-      // named animationend callback so listener can be deleted to prevent memory leaks
-      const hide_loader = (e) => {
-        loader.removeEventListener('animationend', hide_loader);
-        loader.classList.add(CONSTANTS.css.hidden);
-      };
-
-      // hide loader after css animation completes
-      loader.addEventListener('animationend', hide_loader);
 
       // ========= MAP UI / VIEW CREATION ============
 
@@ -1683,6 +1747,8 @@
       brand.src = CONSTANTS.catalyze_logo_img;
       branding.append(brand);
 
+     
+
       // create the list view
       map.on('idle', () => {
         // only need to get the features once
@@ -1704,6 +1770,60 @@
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
         }
+
+        // receive and interpet signals from parent window if need to do stuff for that
+        const { message = '' } = window._publicState;
+        if (message) {
+          const parentMsgData = JSON.parse(message);
+          const { presetMarker = '' } = parentMsgData;
+          // save the preset marker name id if it was sent from parent
+          state.preset_marker_name = presetMarker;
+          // clear the message data
+          window._publicState.message = '';
+        }
+        
+        // if preset marker is set, center+zoom the map on that feature
+        if (state.preset_marker_name) {
+          // move to a specified set point if signaled in the state or by postmessage
+          const project_features = map.querySourceFeatures('composite', {
+            'sourceLayer': CONSTANTS.layers.projects_source
+          });
+          const workshop_features = map.querySourceFeatures('composite', {
+            'sourceLayer': CONSTANTS.layers.workshops_source
+          });
+          const all_source_features = [...project_features, ...workshop_features];
+
+          moveToFeatureByName(state.preset_marker_name, all_source_features);
+
+          const presetFeature = getFeatureByProjectName(state.preset_marker_name, data.features);
+          if (presetFeature) {
+            hoverize_feature(presetFeature, state, false);
+          }
+        }
+      });
+
+      map.once('idle', ()=> {
+        // wait for map idle to remove preloader as that is when everything has rendered
+        // and map logic has run, including any lazy loaded in source data chunks
+
+        // ============ PRELOADER =============
+
+        // animate hiding loader on map load
+        loader.classList.add(CONSTANTS.css.fade_out_slow);
+        loader_title.classList.add(CONSTANTS.css.slide_top);
+        loader_text.classList.add(CONSTANTS.css.slide_bottom);
+
+        // named animationend callback so listener can be deleted to prevent memory leaks
+        const hide_loader = (e) => {
+          loader.removeEventListener('animationend', hide_loader);
+          loader.classList.add(CONSTANTS.css.hidden);
+        };
+
+        // hide loader after css animation completes
+        loader.addEventListener('animationend', hide_loader);
+
+        // clear preset marker so it doesnt keep centering on it every idle
+        state.preset_marker_name = ''
       });
 
       // ======= CONTROLS & INTERACTION ========
@@ -1718,11 +1838,15 @@
       list_view.addEventListener('click', (e) => {
         const current_listing = e.target.closest('li');
         const current_project_id = current_listing.getAttribute('data-index');
+        const current_feature = data.features[current_project_id];
+        const current_page = current_feature.properties[CONSTANTS.webpage_key];
 
-        activate_feature({
-          feature: data.features[current_project_id],
-          listing: current_listing
-        }, state);
+        // activate_feature({
+        //   feature: data.features[current_project_id],
+        //   listing: current_listing
+        // }, state);
+
+        sendMessageToParent(`{OPEN}=${current_page}`);
       });
 
       // When a click event occurs on a marker in the projects layer, show info
@@ -1730,11 +1854,14 @@
 
         const current_project = e.features[0];
         const current_project_name = current_project.properties[CONSTANTS.projects_id_key];
+        const current_project_page = current_project.properties[CONSTANTS.webpage_key];
 
-        activate_feature({
-          feature: current_project,
-          listing: state.listings[current_project_name]
-        }, state);
+        sendMessageToParent(`{OPEN}=${current_project_page}`);
+
+        // activate_feature({
+        //   feature: current_project,
+        //   listing: state.listings[current_project_name]
+        // }, state);
       });
 
       // add an event handler for clicks on workshops
@@ -1742,11 +1869,14 @@
 
         const current_workshop = e.features[0];
         const current_workshop_name = current_workshop.properties[CONSTANTS.projects_id_key];
+        const current_workshop_page = current_workshop.properties[CONSTANTS.webpage_key];
 
-        activate_feature({
-          feature: current_workshop,
-          listing: state.listings[current_workshop_name]
-        }, state);
+        // activate_feature({
+        //   feature: current_workshop,
+        //   listing: state.listings[current_workshop_name]
+        // }, state);
+        
+        sendMessageToParent(`{OPEN}=${current_workshop_page}`)
       });      
 
       // handle clicks on dev zone areas
@@ -1835,6 +1965,8 @@
 
       map.on('mouseleave', CONSTANTS.layers.workshops, deactivate.bind(this, state));
 
+      // deprecate the dev zone interactivity for now
+
       // map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
       //   const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
       //   const corresponding_feature = data.features_map[current_project];
@@ -1850,19 +1982,6 @@
 
       // map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
 
-      // move to a specified set point if specified here logic
-      const project_features = map.querySourceFeatures('composite', {
-        'sourceLayer': CONSTANTS.layers.projects_source
-      });
-      const workshop_features = map.querySourceFeatures('composite', {
-        'sourceLayer': CONSTANTS.layers.workshops_source
-      });
-      const all_source_features = [...project_features, ...workshop_features];
-
-      // if preset marker is set, center+zoom the map on that feature
-      if (state.preset_marker_name) {
-        moveToFeatureByName(state.preset_marker_name, all_source_features);
-      }
     });
 
   </script>
