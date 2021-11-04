@@ -42,6 +42,12 @@ App styling/CSS is contained within the 2nd pair of style tags in the `<head>`.
 
 App logic/JS is contained within the `<script>` tags at the end of the `<body`.
 
+### Updating Mapbox Styles
+
+Updating the styling within the map itself is done through Mapbox Studio, a WYSIWIG tool for generating hosted map styles. Mapbox Studio can be accessed at [https://studio.mapbox.com/](https://studio.mapbox.com/) though you will need access to the Catalyze SV Mapbox account.
+
+When updating the map styles, it may not show the changes instantly. Try clearing your browser cache first. If it still doesn't show, you can try some tricks that clear Mapbox's style caching. In the style editor for Mapbox studio, you can hit the setting button, uncheck source compositing in the menu, then publish those changes. Then, reopen the settings menu, check source compositing again, and then republish. This sometimes helps the cache clear go through.
+
 ### Migration Notes
 
 **IMPORTANT: Make sure you have source compositing turned on in your Style.**
