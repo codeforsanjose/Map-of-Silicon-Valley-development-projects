@@ -659,10 +659,6 @@
     // message listener declared early as possible due to timing of parent message
     window.onmessage = function(e){
       const {data = '', origin = ''} = e;
-        // prevent messages from other domains for security
-        // if (!CONSTANTS.authorized_parent_domains.includes(origin)) {
-        //   return
-        // }
 
         if (data) {        
             window._publicState.message = data; 
