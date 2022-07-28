@@ -659,10 +659,8 @@
     // message listener declared early as possible due to timing of parent message
     window.onmessage = function(e){
       const {data = '', origin = ''} = e;
-
-        if (data) {        
-            window._publicState.message = data; 
-        }
+    
+      window._publicState.message = data; 
     };
   </script>
 
