@@ -654,11 +654,16 @@
   <script>
     // place to stash early sent data for use in the app
     window._publicState = {
-      message: ''
+      message: '',
+      parent_domain: '',
     }
     // message listener declared early as possible due to timing of parent message
     window.onmessage = function(e){
       const {data = '', origin = ''} = e;
+      // save the domain if sent from parent for later messaging
+      if (data.includes('PARENT=')) {
+        window._publicState.parent_domain = data.replace('PARENT=', ''); 
+      }
     
       window._publicState.message = data; 
     };
@@ -718,11 +723,12 @@
       active_project: null,
       active_view: null,
       active_marker: null,
-      preset_marker_name: '', 
+      preset_marker_name: '',
+      retries: 0, 
     }
 
     const CONSTANTS = {
-      authorized_parent_domains: ['https://www.catalyzesv.org', "https://editor.wix.com/"],
+      authorized_parent_domains: ['https://www.catalyzesiliconvalley.org', "https://editor.wix.com/"],
       mapbox_key: 'pk.eyJ1IjoiY2F0YWx5emVzdiIsImEiOiJjazZ4d2RoN2gwa2QyM2tydnF6dG1zbjNrIn0.erXugBYot80KgmE2egMXCA',
       mapbox_style_url: 'mapbox://styles/catalyzesv/ck85b2nvx09ba1ipcl1itwh9r',
       css: {
@@ -1111,7 +1117,7 @@
         <h3>Resources & Links</h4>
         ${catalyze_status_html}
         <p>
-          Catalyze SV evaluates project sustainability, equity, and vibrancy. <a href="https://www.catalyzesv.org/projects">Learn about our project review process.</a>
+          Catalyze SV evaluates project sustainability, equity, and vibrancy. <a href="https://www.catalyzesiliconvalley.org/projects">Learn about our project review process.</a>
         </p>
         <p>
           ${catalyze_scorecard_html}
@@ -1213,7 +1219,7 @@
              <h3>Resources & Links</h4>
              ${meeting_type_html}
              <p>
-              Catalyze SV works with cities and developers to enhance the community engagement process. <a href=" https://www.catalyzesv.org/communityengagement">Learn about our community engagement work.</a>
+              Catalyze SV works with cities and developers to enhance the community engagement process. <a href=" https://www.catalyzesiliconvalley.org/communityengagement">Learn about our community engagement work.</a>
              </p>
              <p>
                ${city_docs_html}
@@ -1670,10 +1676,30 @@
       })
     }
 
-    function sendMessageToParent(message = "") {
-      CONSTANTS.authorized_parent_domains.forEach((currentDomain) => {
+    function sendMessageToParent(message = "", fuzzyAuth = true) {
+      const { parent_domain = '' } = window._publicState;
+      // if the iframe parent sent us its domain, we can use that for messaging authorization
+      const allParentDomains = parent_domain ? 
+        [parent_domain, ...CONSTANTS.authorized_parent_domains] : CONSTANTS.authorized_parent_domains;
+      allParentDomains.forEach((currentDomain) => {
         window.parent.postMessage(message, currentDomain);
       });
+    }
+
+    function checkForMessageFromParent(maxRetries = 1) {
+      // checks if the parent sent a message containing a preset zoom/center location for the map
+      const { message = '' } = window._publicState;
+        if (message) {
+          const parentMsgData = JSON.parse(message);
+          const { presetMarker = '' } = parentMsgData;
+          // save the preset marker name id if it was sent from parent
+          state.preset_marker_name = presetMarker;
+          // clear the message data
+          window._publicState.message = '';
+        } else if (state.retries < maxRetries) {
+          window.setTimeout(checkForMessageFromParent, 100)
+          state.retries += 1;
+        }
     }
 
     // =============== APP LOGIC ===============
@@ -1741,8 +1767,6 @@
       brand.src = CONSTANTS.catalyze_logo_img;
       branding.append(brand);
 
-     
-
       // create the list view
       map.on('idle', () => {
         // only need to get the features once
@@ -1761,20 +1785,14 @@
             return map
           }, {});
 
+          const filtered = rendered_features.filter(({properties}) => {});
+
           const projects_list = generate_list_view(data.features, data.phases);
           list_view.append(projects_list);
         }
 
         // receive and interpet signals from parent window if need to do stuff for that
-        const { message = '' } = window._publicState;
-        if (message) {
-          const parentMsgData = JSON.parse(message);
-          const { presetMarker = '' } = parentMsgData;
-          // save the preset marker name id if it was sent from parent
-          state.preset_marker_name = presetMarker;
-          // clear the message data
-          window._publicState.message = '';
-        }
+        checkForMessageFromParent();
         
         // if preset marker is set, center+zoom the map on that feature
         if (state.preset_marker_name) {
@@ -1824,9 +1842,12 @@
 
       // catch the target through event bubbling
       view_menu.addEventListener('click', (e) => {
-        const view_type = e.target.getAttribute('data-view-id');
+        const isViewButton = e.target?.className?.includes('view-btn')
+        if (isViewButton) {
+          const view_type = e.target.getAttribute('data-view-id');
 
-        show_view(view_type);
+          show_view(view_type);
+        }
       });
 
       list_view.addEventListener('click', (e) => {
@@ -1834,11 +1855,6 @@
         const current_project_id = current_listing.getAttribute('data-index');
         const current_feature = data.features[current_project_id];
         const current_page = current_feature.properties[CONSTANTS.webpage_key];
-
-        // activate_feature({
-        //   feature: data.features[current_project_id],
-        //   listing: current_listing
-        // }, state);
 
         sendMessageToParent(`{OPEN}=${current_page}`);
       });
@@ -1851,11 +1867,6 @@
         const current_project_page = current_project.properties[CONSTANTS.webpage_key];
 
         sendMessageToParent(`{OPEN}=${current_project_page}`);
-
-        // activate_feature({
-        //   feature: current_project,
-        //   listing: state.listings[current_project_name]
-        // }, state);
       });
 
       // add an event handler for clicks on workshops
@@ -1864,24 +1875,9 @@
         const current_workshop = e.features[0];
         const current_workshop_name = current_workshop.properties[CONSTANTS.projects_id_key];
         const current_workshop_page = current_workshop.properties[CONSTANTS.webpage_key];
-
-        // activate_feature({
-        //   feature: current_workshop,
-        //   listing: state.listings[current_workshop_name]
-        // }, state);
         
         sendMessageToParent(`{OPEN}=${current_workshop_page}`)
       });      
-
-      // handle clicks on dev zone areas
-      // map.on('click', CONSTANTS.layers.dev_zones, (e) => {
-      //   const current_project_name = e.features[0].properties[CONSTANTS.projects_id_key];
-
-      //   activate_feature({
-      //     feature: data.features_map[current_project_name],
-      //     listing: state.listings[current_project_name]
-      //   }, state);
-      // });
 
       close_btn.addEventListener('click', () => {
 
@@ -1958,23 +1954,6 @@
       });
 
       map.on('mouseleave', CONSTANTS.layers.workshops, deactivate.bind(this, state));
-
-      // deprecate the dev zone interactivity for now
-
-      // map.on('mouseenter', CONSTANTS.layers.dev_zones, function (e) {
-      //   const current_project = e.features[0].properties[CONSTANTS.projects_id_key];
-      //   const corresponding_feature = data.features_map[current_project];
-
-      //   // Change the cursor to a pointer when the mouse is over the projects layer
-      //   map.getCanvas().style.cursor = 'pointer';
-
-      //   // don't want mouseovers to change the opened popup when sidebar is open
-      //   if (!state.sidebar_open) {
-      //     hoverize_feature(corresponding_feature, state);
-      //   }
-      // });
-
-      // map.on('mouseleave', CONSTANTS.layers.dev_zones, deactivate.bind(this, state));
 
     });
 
