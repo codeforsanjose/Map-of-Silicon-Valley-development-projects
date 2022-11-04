@@ -10,6 +10,9 @@ $w.onReady(function () {
 	// allow iframe to be fullscreened
 	$w("#html1").allowFullScreen(); 
 
+	// forward the current site domain to the map for authorized communication
+	map.postMessage(`PARENT=${wixLocation.baseUrl}`);
+
 	// wait for the map iframe component to signal it's ready to receive
 	map.onMessage( (e) => {
 		const { data } = e;
