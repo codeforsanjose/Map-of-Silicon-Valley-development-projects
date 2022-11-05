@@ -6,6 +6,9 @@ Built through the collaboration of [Catalyze SV](https://www.catalyzesv.org/) an
 
 View the deployed Project Tracker Map: [https://www.catalyzesv.org/map](https://www.catalyzesv.org/map)
 
+Or see just the map deployed on Github pages from the main branch:
+[https://codeforsanjose.github.io/Map-of-Silicon-Valley-development-projects/](https://codeforsanjose.github.io/Map-of-Silicon-Valley-development-projects/).
+
 ## How to Use
 
 Open the map in your web browser to view it. Click on different development project icons on the map to view information related to a specific development project.
