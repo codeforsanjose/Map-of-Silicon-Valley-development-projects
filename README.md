@@ -1,6 +1,6 @@
 # Catalyze SV Project Tracker
 
-A map of Silicon Valley development projects and project information in a easy to use, accessible format for the public, making it easier to see what local construction is going on and how it impacts the community.
+A map of Silicon Valley development projects and project information in a easy to use, accessible format for the public, making it easier to see what local construction is going on and how it impacts the community. Primarily used as an embed on a webpage.
 
 Built through the collaboration of [Catalyze SV](https://www.catalyzesv.org/) and [Code for San Jose](https://www.codeforsanjose.com/) members.
 
@@ -45,6 +45,8 @@ App styling/CSS is contained within the 2nd pair of style tags in the `<head>`.
 
 App logic/JS is contained within the `<script>` tags at the end of the `<body`.
 
+Primarily used by Catalyze SV as an embed on pages of their website. All embeds on their website are rendered in iframes for security, so there is also some iframe communication code included.
+
 ### Updating Mapbox Styles
 
 Updating the styling within the map itself is done through Mapbox Studio, a WYSIWIG tool for generating hosted map styles. Mapbox Studio can be accessed at [https://studio.mapbox.com/](https://studio.mapbox.com/) though you will need access to the Catalyze SV Mapbox account.
@@ -71,9 +73,10 @@ const CONSTANTS = {
 `mapbox_key`: Get the public token from either the Mapbox.com account page or in Mapbox Studio with the style for the map open, click on the **Share** button and look for the field that says `Access Token`. Copy that token and replace the `mapbox_key` value in the `CONSTANTS` object.
 `mapbox_style_url`: Get the style url from either the Mapbox Studio Styles page showing all the saved styles or with when you have the style open in Mapbox Studio. On the Styles page, you can just click the share button or the 3 dot button to view the Style Url. When you have the style actually open, you just click on the **Share** button in the top right and look for the field that says `Style URL`. Copy that url and replace the value of `mapbox_style_url` in the `CONSTANTS` object.
 
-### Tech Notes
+### Architecture Notes
 
 The intended use case is within an iframe element due to limitations on the Wix platform. One of the main project requirements was the ability to integrate the app code onto Wix as the client uses it to make it easy for non-technical people to maintain their website. Wix does not allow direct access to the DOM, so raw markup and scripts must be run in an iframe element for sandboxing. Thus, the code assumes no access to a backend or even the page it is being rendered on.
+[View Wix Velo Documentation](https://www.wix.com/velo/reference/api-overview)
 
 This requires loading all external libraries and resources from CDNs. You'll notice most of it comes from cdnjs.
 
@@ -82,3 +85,8 @@ Built on the Mapbox GL API. Having the documentation available for reference wil
 The app uses data and styles built with Mapbox's WYSIWIG style editor, and obtusely enterprise-grade web app that allows you to import data, do CRUD operations on data, generate tilesets, and style your map in a highly faceted manner. It does have a bit of a learning curve though, so you should read the documentation for it: [View Mapbox Studio Documentation](https://docs.mapbox.com/studio-manual/overview/)
 
 Scaffolded using [HTML5 Boilerplate for Iframes.](https://github.com/sunnymui/html5-boilerplate-for-iframes)
+
+### Quick Architecture Diagram
+
+Catalyze Website --renders--> App Code (sets up basic ui and interaction handlers) --fetches map data--> Mapbox Data & Map Styling
+
