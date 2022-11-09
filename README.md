@@ -2,9 +2,9 @@
 
 A map of Silicon Valley development projects and project information in a easy to use, accessible format for the public, making it easier to see what local construction is going on and how it impacts the community. Primarily used as an embed on a webpage.
 
-Built through the collaboration of [Catalyze SV](https://www.catalyzesv.org/) and [Code for San Jose](https://www.codeforsanjose.com/) members.
+Built through the collaboration of [Catalyze SV](https://catalyzesiliconvalley.org/) and [Code for San Jose](https://www.codeforsanjose.com/) members.
 
-View the deployed Project Tracker Map: [https://www.catalyzesv.org/map](https://www.catalyzesv.org/map)
+View the deployed Project Tracker Map: [https://catalyzesiliconvalley.org/map](https://catalyzesiliconvalley.org/map)
 
 Or see just the map deployed on Github pages from the main branch:
 [https://codeforsanjose.github.io/Map-of-Silicon-Valley-development-projects/](https://codeforsanjose.github.io/Map-of-Silicon-Valley-development-projects/).
@@ -36,6 +36,23 @@ Join the #catalyze-sv-map channel
 
 Meetup: [https://www.meetup.com/Code-for-San-Jose/](https://www.meetup.com/Code-for-San-Jose/)
 Website: [https://www.codeforsanjose.com/](https://www.codeforsanjose.com/)
+
+## Contributing
+
+Please clone this repository to your local machine.
+
+For any work contributions, please create a feature branch (a branch with your work on it). Name your branch descriptively, preferably with a category tag prefix:
+
+* `feat` is for adding a new feature
+* `fix` is for fixing a bug
+* `refactor` is for changing code for peformance or convenience purpose (e.g. readibility)
+* `chore` is for everything else (writing documentation, formatting, adding tests, cleaning useless code etc.)
+
+Example: `feat/adding-auto-zoom` or `refactor/optimize-initial-render
+
+Once you have finished your work, pull the latest changes from develop and merge them into your work branch, resolving any conflicts. This ensures you have the latest changes that other people may have pushed while you were working. Push your feature branch up to the repository. On GitHub, open a PR (Pull Request) to the `develop` branch, which is basically requesting your branch gets merged into another branch using GitHub's code review process tools.
+
+Please message someone to review/approve your contribution in the Slack channel. Once reviewed and approved, you can merge your changes into develop.
 
 ## Developer Notes
 
