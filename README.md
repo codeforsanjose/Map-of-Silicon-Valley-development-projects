@@ -39,16 +39,20 @@ Website: [https://www.codeforsanjose.com/](https://www.codeforsanjose.com/)
 
 ## Contributing
 
-Please clone this repository to your local machine.
+Please clone this repository to your local machine for your work.
 
-For any work contributions, please create a feature branch (a branch with your work on it). Name your branch descriptively, preferably with a category tag prefix:
+For any contributions, please create a feature branch (a branch with your work on it). Name your branch descriptively, preferably with a category tag prefix:
 
 * `feat` is for adding a new feature
 * `fix` is for fixing a bug
 * `refactor` is for changing code for peformance or convenience purpose (e.g. readibility)
 * `chore` is for everything else (writing documentation, formatting, adding tests, cleaning useless code etc.)
 
-Example: `feat/adding-auto-zoom` or `refactor/optimize-initial-render
+Example: `feat/adding-auto-zoom` or `refactor/optimize-initial-render`
+
+Feel free to be more specific in the tag for chore branches: `test` for adding tests, `docs` for docs changes, `style` for cleaning up whitespace/prettying up things, are other possible tags you can use. 
+
+Smaller commits with a focus on a specfic chunk of work are appreciated. Descriptive commit messages are gold, feel free to use the above tag prefixes in your commit messages as well.
 
 Once you have finished your work, pull the latest changes from develop and merge them into your work branch, resolving any conflicts. This ensures you have the latest changes that other people may have pushed while you were working. Push your feature branch up to the repository. On GitHub, open a PR (Pull Request) to the `develop` branch, which is basically requesting your branch gets merged into another branch using GitHub's code review process tools.
 
