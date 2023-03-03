@@ -4,6 +4,10 @@
 <head>
   <meta charset="utf-8">
   <title>Catalyze SV Project Tracker Map</title>
+  <!-- ! IMPORTANT ! -->
+  <!-- Update this version in wix/public/versionCheck and here to match when you change the code! -->
+  <meta name="version" content="1.0.0">
+  <!-- ! IMPORTANT ! -->
   <meta name="description" content="Maps development projects in the Silicon Valley area and shares Catalyze SV project scores/evaluations for each">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -727,7 +731,10 @@
       retries: 0, 
     }
 
+    const CODE_VERSION = document.querySelector('meta[name="version"]')?.getAttribute("content");
     const CONSTANTS = {
+      // IMPORTANT! Update this version in wix/public and here to match when you change the code!
+      version: CODE_VERSION,
       authorized_parent_domains: ['https://www.catalyzesiliconvalley.org', "https://editor.wix.com/"],
       mapbox_key: 'pk.eyJ1IjoiY2F0YWx5emVzdiIsImEiOiJjazZ4d2RoN2gwa2QyM2tydnF6dG1zbjNrIn0.erXugBYot80KgmE2egMXCA',
       mapbox_style_url: 'mapbox://styles/catalyzesv/ck85b2nvx09ba1ipcl1itwh9r',
@@ -1731,7 +1738,7 @@
     // if we're an embedded iframe on the specified domain
 
     // if embedded iframe on the authorized parent, send a ready message to the parent
-    sendMessageToParent('ready');
+    sendMessageToParent(`ready, version=${CONSTANTS.version}`);
 
     // wait for map to finish load before executing map functions
     map.on('load', () => {
